@@ -109,23 +109,23 @@ const TimeoutPage = ({
         </div>
 
         {/* Breathing circle */}
-        <div className="mb-8">
+        <div className="mb-10">
           <div
-            className={`w-32 h-32 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center transition-transform duration-[4000ms] ease-in-out ${
+            className={`w-28 h-28 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center transition-transform duration-[4000ms] ease-in-out ${
               breatheIn ? "scale-100" : "scale-75"
             }`}
           >
             <div
-              className={`w-24 h-24 rounded-full bg-gradient-to-br from-primary/40 to-primary/60 flex items-center justify-center transition-transform duration-[4000ms] ease-in-out ${
+              className={`w-20 h-20 rounded-full bg-gradient-to-br from-primary/40 to-primary/60 flex items-center justify-center transition-transform duration-[4000ms] ease-in-out ${
                 breatheIn ? "scale-100" : "scale-75"
               }`}
             >
               <div
-                className={`w-16 h-16 rounded-full bg-primary shadow-glow flex items-center justify-center transition-transform duration-[4000ms] ease-in-out ${
+                className={`w-12 h-12 rounded-full bg-primary shadow-glow flex items-center justify-center transition-transform duration-[4000ms] ease-in-out ${
                   breatheIn ? "scale-100" : "scale-75"
                 }`}
               >
-                <span className="text-primary-foreground text-xs font-medium">
+                <span className="text-primary-foreground text-[10px] font-medium">
                   {breatheIn ? "Breathe" : "Out"}
                 </span>
               </div>
@@ -133,45 +133,29 @@ const TimeoutPage = ({
           </div>
         </div>
 
-        {/* Time's up message */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-3">
-            Time for a break
-          </h1>
-          <p className="text-lg text-muted-foreground mb-2">
-            You've reached your {limitType === "time" ? "time" : "opens"} limit for{" "}
-            <span className="font-semibold text-primary">{groupName}</span>
+        {/* Main motivational quote - Most prominent */}
+        <div className="max-w-2xl w-full text-center mb-10">
+          <p className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground leading-tight">
+            {quotes[currentQuote]}
           </p>
-          <p className="text-sm text-muted-foreground">
-            Including {siteName} • Resets at {resetTime}
-          </p>
+          {/* Quote dots */}
+          <div className="flex justify-center gap-2 mt-8">
+            {quotes.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentQuote(index)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  index === currentQuote
+                    ? "bg-primary w-6"
+                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                }`}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Quote card */}
-        <Card className="max-w-xl w-full shadow-soft border-0 bg-white/80 backdrop-blur mb-8">
-          <CardContent className="p-8 text-center">
-            <p className="text-xl md:text-2xl font-medium text-foreground leading-relaxed">
-              "{quotes[currentQuote]}"
-            </p>
-            {/* Quote dots */}
-            <div className="flex justify-center gap-2 mt-6">
-              {quotes.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentQuote(index)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    index === currentQuote
-                      ? "bg-primary w-6"
-                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                  }`}
-                />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Suggestions carousel */}
-        <div className="w-full max-w-3xl">
+        <div className="w-full max-w-3xl mb-12">
           <p className="text-center text-muted-foreground mb-4 font-medium">
             What you could do instead...
           </p>
@@ -218,10 +202,16 @@ const TimeoutPage = ({
           </div>
         </div>
 
-        {/* Footer */}
-        <p className="absolute bottom-6 text-sm text-muted-foreground">
-          Stay mindful. You've got this! 🌱
-        </p>
+        {/* Limit info - Bottom of page */}
+        <div className="text-center text-muted-foreground">
+          <p className="text-sm">
+            You've reached your {limitType === "time" ? "time" : "opens"} limit for{" "}
+            <span className="font-semibold text-foreground">{groupName}</span>
+          </p>
+          <p className="text-xs mt-1">
+            Including {siteName} • Resets at {resetTime}
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -133,7 +133,7 @@ const Index = () => {
             </div>
             
             <Card className="overflow-hidden rounded-3xl shadow-soft border-0">
-              <div className="h-[700px] overflow-hidden">
+              <div className="h-[700px] overflow-y-auto">
                 <TimeoutPage 
                   siteName="facebook.com"
                   groupName="Social Media"

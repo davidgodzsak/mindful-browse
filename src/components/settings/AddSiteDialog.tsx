@@ -1,0 +1,123 @@
+import { useState } from "react";
+import { Plus, Clock, MousePointerClick } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+interface AddSiteDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAdd: (site: { name: string; timeLimit?: number; opensLimit?: number }) => void;
+}
+
+const AddSiteDialog = ({ open, onOpenChange, onAdd }: AddSiteDialogProps) => {
+  const [siteName, setSiteName] = useState("");
+  const [timeLimit, setTimeLimit] = useState("");
+  const [opensLimit, setOpensLimit] = useState("");
+
+  const handleAdd = () => {
+    if (siteName.trim()) {
+      onAdd({
+        name: siteName.trim(),
+        timeLimit: timeLimit ? parseInt(timeLimit) : undefined,
+        opensLimit: opensLimit ? parseInt(opensLimit) : undefined,
+      });
+      setSiteName("");
+      setTimeLimit("");
+      setOpensLimit("");
+      onOpenChange(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md rounded-2xl">
+        <DialogHeader>
+          <DialogTitle>Add New Site</DialogTitle>
+          <DialogDescription>
+            Add a website to track with time or opens limits.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="site-name">Website URL</Label>
+            <Input
+              id="site-name"
+              placeholder="e.g., facebook.com"
+              value={siteName}
+              onChange={(e) => setSiteName(e.target.value)}
+              className="rounded-xl"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="time-limit" className="flex items-center gap-2">
+                <Clock size={14} />
+                Time limit (min)
+              </Label>
+              <Input
+                id="time-limit"
+                type="number"
+                placeholder="e.g., 30"
+                value={timeLimit}
+                onChange={(e) => setTimeLimit(e.target.value)}
+                className="rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="opens-limit" className="flex items-center gap-2">
+                <MousePointerClick size={14} />
+                Opens limit
+              </Label>
+              <Input
+                id="opens-limit"
+                type="number"
+                placeholder="e.g., 10"
+                value={opensLimit}
+                onChange={(e) => setOpensLimit(e.target.value)}
+                className="rounded-xl"
+              />
+            </div>
+          </div>
+          {/* Quick presets */}
+          <div className="space-y-2">
+            <Label>Quick presets</Label>
+            <div className="flex flex-wrap gap-2">
+              {[15, 30, 45, 60].map((mins) => (
+                <Button
+                  key={mins}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => setTimeLimit(mins.toString())}
+                >
+                  {mins} min
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
+            Cancel
+          </Button>
+          <Button onClick={handleAdd} disabled={!siteName.trim()} className="rounded-xl">
+            <Plus size={16} className="mr-2" />
+            Add Site
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default AddSiteDialog;

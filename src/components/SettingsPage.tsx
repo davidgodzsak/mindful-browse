@@ -20,6 +20,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import Logo from "./Logo";
+import AddSiteDialog from "./settings/AddSiteDialog";
+import CreateGroupDialog from "./settings/CreateGroupDialog";
+import AddSiteToGroupDialog from "./settings/AddSiteToGroupDialog";
 
 interface Site {
   id: string;
@@ -39,8 +42,30 @@ interface Group {
   expanded?: boolean;
 }
 
+const getFaviconEmoji = (siteName: string): string => {
+  const emojiMap: Record<string, string> = {
+    "facebook.com": "📘",
+    "instagram.com": "📸",
+    "twitter.com": "🐦",
+    "reddit.com": "🤖",
+    "youtube.com": "▶️",
+    "netflix.com": "🎬",
+    "twitch.tv": "💜",
+    "tiktok.com": "🎵",
+    "linkedin.com": "💼",
+    "pinterest.com": "📌",
+    "snapchat.com": "👻",
+  };
+  return emojiMap[siteName.toLowerCase()] || "🌐";
+};
+
 const SettingsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [addSiteDialogOpen, setAddSiteDialogOpen] = useState(false);
+  const [createGroupDialogOpen, setCreateGroupDialogOpen] = useState(false);
+  const [addToGroupDialogOpen, setAddToGroupDialogOpen] = useState(false);
+  const [selectedGroupForAdd, setSelectedGroupForAdd] = useState<Group | null>(null);
+
   const [groups, setGroups] = useState<Group[]>([
     {
       id: "1",
@@ -105,6 +130,66 @@ const SettingsPage = () => {
     setMotivationalMessages(motivationalMessages.filter((_, i) => i !== index));
   };
 
+  const handleAddSite = (site: { name: string; timeLimit?: number; opensLimit?: number }) => {
+    const newSite: Site = {
+      id: `i${Date.now()}`,
+      name: site.name,
+      favicon: getFaviconEmoji(site.name),
+      timeLimit: site.timeLimit,
+      opensLimit: site.opensLimit,
+    };
+    setIndividualSites([...individualSites, newSite]);
+  };
+
+  const handleRemoveSite = (siteId: string) => {
+    setIndividualSites(individualSites.filter((s) => s.id !== siteId));
+  };
+
+  const handleCreateGroup = (groupData: { name: string; color: string; timeLimit: number; opensLimit: number }) => {
+    const newGroup: Group = {
+      id: `g${Date.now()}`,
+      name: groupData.name,
+      color: groupData.color,
+      timeLimit: groupData.timeLimit,
+      opensLimit: groupData.opensLimit,
+      sites: [],
+      expanded: true,
+    };
+    setGroups([...groups, newGroup]);
+  };
+
+  const handleAddSiteToGroup = (siteName: string) => {
+    if (selectedGroupForAdd) {
+      const newSite: Site = {
+        id: `${selectedGroupForAdd.id}-${Date.now()}`,
+        name: siteName,
+        favicon: getFaviconEmoji(siteName),
+      };
+      setGroups(
+        groups.map((g) =>
+          g.id === selectedGroupForAdd.id
+            ? { ...g, sites: [...g.sites, newSite] }
+            : g
+        )
+      );
+    }
+  };
+
+  const handleRemoveSiteFromGroup = (groupId: string, siteId: string) => {
+    setGroups(
+      groups.map((g) =>
+        g.id === groupId
+          ? { ...g, sites: g.sites.filter((s) => s.id !== siteId) }
+          : g
+      )
+    );
+  };
+
+  const openAddToGroupDialog = (group: Group) => {
+    setSelectedGroupForAdd(group);
+    setAddToGroupDialogOpen(true);
+  };
+
   return (
     <div className="min-h-screen gradient-calm">
       {/* Header */}
@@ -151,7 +236,7 @@ const SettingsPage = () => {
                   className="pl-11 rounded-xl border-0 bg-card shadow-soft"
                 />
               </div>
-              <Button className="rounded-xl shadow-soft">
+              <Button className="rounded-xl shadow-soft" onClick={() => setAddSiteDialogOpen(true)}>
                 <Plus size={18} className="mr-2" />
                 Add site
               </Button>
@@ -199,6 +284,7 @@ const SettingsPage = () => {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-destructive"
+                        onClick={() => handleRemoveSite(site.id)}
                       >
                         <Trash2 size={14} />
                       </Button>
@@ -264,6 +350,7 @@ const SettingsPage = () => {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive"
+                              onClick={() => handleRemoveSiteFromGroup(group.id, site.id)}
                             >
                               <Trash2 size={12} />
                             </Button>
@@ -273,6 +360,7 @@ const SettingsPage = () => {
                           variant="ghost"
                           size="sm"
                           className="w-full border-dashed border rounded-xl text-muted-foreground"
+                          onClick={() => openAddToGroupDialog(group)}
                         >
                           <Plus size={14} className="mr-2" />
                           Add site to group
@@ -294,7 +382,7 @@ const SettingsPage = () => {
                   Create groups to share limits across related sites
                 </p>
               </div>
-              <Button className="rounded-xl shadow-soft">
+              <Button className="rounded-xl shadow-soft" onClick={() => setCreateGroupDialogOpen(true)}>
                 <Plus size={18} className="mr-2" />
                 New group
               </Button>
@@ -324,7 +412,10 @@ const SettingsPage = () => {
                             >
                               <span>{site.favicon}</span>
                               {site.name}
-                              <button className="ml-1 hover:bg-background rounded-full p-0.5">
+                              <button
+                                className="ml-1 hover:bg-background rounded-full p-0.5"
+                                onClick={() => handleRemoveSiteFromGroup(group.id, site.id)}
+                              >
                                 <Trash2 size={10} />
                               </button>
                             </Badge>
@@ -333,6 +424,7 @@ const SettingsPage = () => {
                             variant="outline"
                             size="sm"
                             className="rounded-full h-6 text-xs"
+                            onClick={() => openAddToGroupDialog(group)}
                           >
                             <Plus size={12} className="mr-1" />
                             Add
@@ -440,6 +532,24 @@ const SettingsPage = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Dialogs */}
+      <AddSiteDialog
+        open={addSiteDialogOpen}
+        onOpenChange={setAddSiteDialogOpen}
+        onAdd={handleAddSite}
+      />
+      <CreateGroupDialog
+        open={createGroupDialogOpen}
+        onOpenChange={setCreateGroupDialogOpen}
+        onCreate={handleCreateGroup}
+      />
+      <AddSiteToGroupDialog
+        open={addToGroupDialogOpen}
+        onOpenChange={setAddToGroupDialogOpen}
+        groupName={selectedGroupForAdd?.name || ""}
+        onAdd={handleAddSiteToGroup}
+      />
     </div>
   );
 };

@@ -70,7 +70,7 @@ const CreateGroupDialog = ({ open, onOpenChange, onCreate, initialGroup, isEditi
     onCreate({
       name: groupName.trim(),
       color: selectedColor,
-      timeLimit: parsedTimeLimit || 30, // Default to 30 if no time limit provided but opens limit exists
+      timeLimit: parsedTimeLimit || (isEditing ? undefined : 30), // Only apply default when creating new
       opensLimit: parsedOpensLimit, // Can be undefined
     });
     setGroupName("");

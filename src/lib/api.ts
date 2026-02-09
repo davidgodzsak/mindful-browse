@@ -143,10 +143,11 @@ export async function updateSite(
   if (updates.name !== undefined) {
     backendUpdates.urlPattern = updates.name;
   }
-  if (updates.timeLimit !== undefined) {
-    backendUpdates.dailyLimitSeconds = updates.timeLimit * 60;
+  // Handle timeLimit - it can be undefined (don't update) or a number (set)
+  if ('timeLimit' in updates) {
+    backendUpdates.dailyLimitSeconds = updates.timeLimit && updates.timeLimit > 0 ? updates.timeLimit * 60 : null;
   }
-  // Handle opensLimit - it can be undefined (remove) or a number (set)
+  // Handle opensLimit - it can be undefined (don't update) or a number (set)
   if ('opensLimit' in updates) {
     backendUpdates.dailyOpenLimit = updates.opensLimit && updates.opensLimit > 0 ? updates.opensLimit : null;
   }
@@ -218,10 +219,11 @@ export async function updateGroup(
   if (updates.color !== undefined) {
     backendUpdates.color = updates.color;
   }
-  if (updates.timeLimit !== undefined) {
-    backendUpdates.dailyLimitSeconds = updates.timeLimit * 60;
+  // Handle timeLimit - it can be undefined (don't update) or a number (set)
+  if ('timeLimit' in updates) {
+    backendUpdates.dailyLimitSeconds = updates.timeLimit && updates.timeLimit > 0 ? updates.timeLimit * 60 : null;
   }
-  // Handle opensLimit - it can be undefined (remove) or a number (set)
+  // Handle opensLimit - it can be undefined (don't update) or a number (set)
   if ('opensLimit' in updates) {
     backendUpdates.dailyOpenLimit = updates.opensLimit && updates.opensLimit > 0 ? updates.opensLimit : null;
   }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Clock, MousePointerClick } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +16,27 @@ interface AddSiteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdd: (site: { name: string; timeLimit?: number; opensLimit?: number }) => void;
+  initialSite?: { id: string; name: string; timeLimit?: number; opensLimit?: number };
+  isEditing?: boolean;
 }
 
-const AddSiteDialog = ({ open, onOpenChange, onAdd }: AddSiteDialogProps) => {
+const AddSiteDialog = ({ open, onOpenChange, onAdd, initialSite, isEditing }: AddSiteDialogProps) => {
   const [siteName, setSiteName] = useState("");
   const [timeLimit, setTimeLimit] = useState("");
   const [opensLimit, setOpensLimit] = useState("");
+
+  // Update form when dialog opens/closes or when editing site changes
+  useEffect(() => {
+    if (open && isEditing && initialSite) {
+      setSiteName(initialSite.name);
+      setTimeLimit(initialSite.timeLimit ? initialSite.timeLimit.toString() : "");
+      setOpensLimit(initialSite.opensLimit ? initialSite.opensLimit.toString() : "");
+    } else if (open && !isEditing) {
+      setSiteName("");
+      setTimeLimit("");
+      setOpensLimit("");
+    }
+  }, [open, isEditing, initialSite]);
 
   const handleAdd = () => {
     if (!siteName.trim()) {
@@ -52,9 +67,9 @@ const AddSiteDialog = ({ open, onOpenChange, onAdd }: AddSiteDialogProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Add New Site</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Site" : "Add New Site"}</DialogTitle>
           <DialogDescription>
-            Add a website to track with time or opens limits.
+            {isEditing ? "Update the limits for this website." : "Add a website to track with time or opens limits."}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -126,8 +141,14 @@ const AddSiteDialog = ({ open, onOpenChange, onAdd }: AddSiteDialogProps) => {
             disabled={!siteName.trim() || (!timeLimit && !opensLimit)}
             className="rounded-xl"
           >
-            <Plus size={16} className="mr-2" />
-            Add Site
+            {isEditing ? (
+              <>Update Site</>
+            ) : (
+              <>
+                <Plus size={16} className="mr-2" />
+                Add Site
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

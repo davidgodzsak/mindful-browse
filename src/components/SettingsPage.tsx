@@ -71,6 +71,7 @@ const SettingsPage = () => {
   const [addToGroupDialogOpen, setAddToGroupDialogOpen] = useState(false);
   const [selectedGroupForAdd, setSelectedGroupForAdd] = useState<Group | null>(null);
   const [selectedGroupForEdit, setSelectedGroupForEdit] = useState<Group | null>(null);
+  const [editingSite, setEditingSite] = useState<Site | null>(null);
 
   // Real data from API
   const [groups, setGroups] = useState<Group[]>([]);
@@ -169,6 +170,11 @@ const SettingsPage = () => {
         setIndividualSites((prev) =>
           prev.map((s) => (s.id === data.site.id ? data.site : s))
         );
+      } else {
+        // If site now has a groupId, remove it from individual sites
+        setIndividualSites((prev) =>
+          prev.filter((s) => s.id !== data.site.id)
+        );
       }
     },
     siteDeleted: (data) => {
@@ -201,6 +207,10 @@ const SettingsPage = () => {
       });
     },
     siteAddedToGroup: (data) => {
+      // Remove site from individual sites if it was there
+      setIndividualSites((prev) =>
+        prev.filter((s) => s.id !== data.siteId)
+      );
       setGroups((prev) =>
         prev.map((g) =>
           g.id === data.group.id
@@ -357,27 +367,48 @@ const SettingsPage = () => {
   }) => {
     try {
       setIsSaving(true);
-      const newSite = await api.addSite({
-        name: site.name,
-        timeLimit: site.timeLimit,
-        opensLimit: site.opensLimit,
-      });
-      setIndividualSites([...individualSites, newSite]);
+      if (editingSite) {
+        // Update existing site
+        const updatedSite = await api.updateSite(editingSite.id, {
+          name: site.name,
+          timeLimit: site.timeLimit,
+          opensLimit: site.opensLimit,
+        });
+        setIndividualSites(individualSites.map(s => s.id === editingSite.id ? updatedSite : s));
+        setEditingSite(null);
+        toast({
+          title: "Success",
+          description: "Site updated successfully",
+        });
+      } else {
+        // Add new site
+        const newSite = await api.addSite({
+          name: site.name,
+          timeLimit: site.timeLimit,
+          opensLimit: site.opensLimit,
+        });
+        setIndividualSites([...individualSites, newSite]);
+        toast({
+          title: "Success",
+          description: "Site added successfully",
+        });
+      }
       setAddSiteDialogOpen(false);
-      toast({
-        title: "Success",
-        description: "Site added successfully",
-      });
     } catch (error) {
-      console.error("Error adding site:", error);
+      console.error("Error adding/editing site:", error);
       toast({
         title: "Error",
-        description: "Failed to add site. Please try again.",
+        description: `Failed to ${editingSite ? "update" : "add"} site. Please try again.`,
         variant: "destructive",
       });
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const openEditSiteDialog = (site: Site) => {
+    setEditingSite(site);
+    setAddSiteDialogOpen(true);
   };
 
   const handleRemoveSite = async (siteId: string) => {
@@ -667,6 +698,7 @@ const SettingsPage = () => {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
+                        onClick={() => openEditSiteDialog(site)}
                         disabled={isSaving}
                       >
                         <Edit2 size={14} />
@@ -1030,9 +1062,16 @@ const SettingsPage = () => {
       {/* Dialogs */}
       <AddSiteDialog
         open={addSiteDialogOpen}
-        onOpenChange={setAddSiteDialogOpen}
+        onOpenChange={(open) => {
+          setAddSiteDialogOpen(open);
+          if (!open) {
+            setEditingSite(null);
+          }
+        }}
         onAdd={handleAddSite}
         isLoading={isSaving}
+        initialSite={editingSite || undefined}
+        isEditing={!!editingSite}
       />
       <CreateGroupDialog
         open={createGroupDialogOpen}

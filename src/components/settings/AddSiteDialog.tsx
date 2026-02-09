@@ -24,17 +24,28 @@ const AddSiteDialog = ({ open, onOpenChange, onAdd }: AddSiteDialogProps) => {
   const [opensLimit, setOpensLimit] = useState("");
 
   const handleAdd = () => {
-    if (siteName.trim()) {
-      onAdd({
-        name: siteName.trim(),
-        timeLimit: timeLimit ? parseInt(timeLimit) : undefined,
-        opensLimit: opensLimit ? parseInt(opensLimit) : undefined,
-      });
-      setSiteName("");
-      setTimeLimit("");
-      setOpensLimit("");
-      onOpenChange(false);
+    if (!siteName.trim()) {
+      return;
     }
+
+    const parsedTimeLimit = timeLimit ? parseInt(timeLimit) : undefined;
+    const parsedOpensLimit = opensLimit ? parseInt(opensLimit) : undefined;
+
+    // Ensure at least one limit is set
+    if (!parsedTimeLimit && !parsedOpensLimit) {
+      alert("Please set at least a time limit or an opens limit");
+      return;
+    }
+
+    onAdd({
+      name: siteName.trim(),
+      timeLimit: parsedTimeLimit,
+      opensLimit: parsedOpensLimit,
+    });
+    setSiteName("");
+    setTimeLimit("");
+    setOpensLimit("");
+    onOpenChange(false);
   };
 
   return (
@@ -110,7 +121,11 @@ const AddSiteDialog = ({ open, onOpenChange, onAdd }: AddSiteDialogProps) => {
           <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
             Cancel
           </Button>
-          <Button onClick={handleAdd} disabled={!siteName.trim()} className="rounded-xl">
+          <Button
+            onClick={handleAdd}
+            disabled={!siteName.trim() || (!timeLimit && !opensLimit)}
+            className="rounded-xl"
+          >
             <Plus size={16} className="mr-2" />
             Add Site
           </Button>

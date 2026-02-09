@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Plus,
   Search,
@@ -12,6 +12,7 @@ import {
   Quote,
   Settings2,
   GripVertical,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,10 +20,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 import Logo from "./Logo";
 import AddSiteDialog from "./settings/AddSiteDialog";
 import CreateGroupDialog from "./settings/CreateGroupDialog";
 import AddSiteToGroupDialog from "./settings/AddSiteToGroupDialog";
+import * as api from "@/lib/api";
+import { useBroadcastUpdates } from "@/hooks/useBroadcastUpdates";
 
 interface Site {
   id: string;
@@ -60,56 +64,159 @@ const getFaviconEmoji = (siteName: string): string => {
 };
 
 const SettingsPage = () => {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [addSiteDialogOpen, setAddSiteDialogOpen] = useState(false);
   const [createGroupDialogOpen, setCreateGroupDialogOpen] = useState(false);
   const [addToGroupDialogOpen, setAddToGroupDialogOpen] = useState(false);
   const [selectedGroupForAdd, setSelectedGroupForAdd] = useState<Group | null>(null);
+  const [selectedGroupForEdit, setSelectedGroupForEdit] = useState<Group | null>(null);
 
-  const [groups, setGroups] = useState<Group[]>([
-    {
-      id: "1",
-      name: "Social Media",
-      color: "bg-blue-500",
-      timeLimit: 30,
-      opensLimit: 15,
-      sites: [
-        { id: "1a", name: "facebook.com", favicon: "📘" },
-        { id: "1b", name: "instagram.com", favicon: "📸" },
-        { id: "1c", name: "twitter.com", favicon: "🐦" },
-        { id: "1d", name: "reddit.com", favicon: "🤖" },
-      ],
-      expanded: true,
-    },
-    {
-      id: "2",
-      name: "Entertainment",
-      color: "bg-red-500",
-      timeLimit: 45,
-      opensLimit: 10,
-      sites: [
-        { id: "2a", name: "youtube.com", favicon: "▶️" },
-        { id: "2b", name: "netflix.com", favicon: "🎬" },
-        { id: "2c", name: "twitch.tv", favicon: "💜" },
-      ],
-      expanded: false,
-    },
-  ]);
-
-  const [individualSites, setIndividualSites] = useState<Site[]>([
-    { id: "i1", name: "news.ycombinator.com", favicon: "🟧", timeLimit: 20 },
-    { id: "i2", name: "producthunt.com", favicon: "🔶", opensLimit: 5 },
-  ]);
-
-  const [motivationalMessages, setMotivationalMessages] = useState([
-    "Take a deep breath and go for a short walk 🚶",
-    "How about reading that book you've been meaning to start? 📚",
-    "Drink some water and stretch your body 💧",
-    "Call a friend or family member you haven't talked to in a while 📱",
-    "Try 5 minutes of meditation to clear your mind 🧘",
-  ]);
-
+  // Real data from API
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [individualSites, setIndividualSites] = useState<Site[]>([]);
+  const [motivationalMessages, setMotivationalMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
+
+  // Loading states
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [version, setVersion] = useState("");
+
+  // Display preferences
+  const [showRandomMessage, setShowRandomMessage] = useState(true);
+  const [showActivitySuggestions, setShowActivitySuggestions] = useState(true);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingMessageText, setEditingMessageText] = useState("");
+
+  // Load version from manifest
+  useEffect(() => {
+    const loadVersion = async () => {
+      try {
+        const response = await fetch('/manifest.json');
+        const manifest = await response.json();
+        if (manifest.version) {
+          setVersion(manifest.version);
+        }
+      } catch (error) {
+        console.error("Failed to load version:", error);
+      }
+    };
+    loadVersion();
+  }, []);
+
+  // Load initial data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const [sitesData, groupsData, messagesData] = await Promise.all([
+          api.getSites(),
+          api.getGroups(),
+          api.getMessages(),
+        ]);
+
+        // Separate standalone sites from group sites
+        const standalone = sitesData.filter((s) => !s.groupId);
+        setIndividualSites(standalone);
+        setGroups(
+          groupsData.map((g) => ({
+            ...g,
+            expanded: false, // Start collapsed
+          }))
+        );
+        setMotivationalMessages(messagesData);
+
+        // Load display preferences separately (optional)
+        try {
+          const preferencesData = await api.getDisplayPreferences();
+          if (preferencesData) {
+            setShowRandomMessage(preferencesData.showRandomMessage !== false);
+            setShowActivitySuggestions(preferencesData.showActivitySuggestions !== false);
+          }
+        } catch (prefError) {
+          console.warn("Could not load display preferences:", prefError);
+          // Use defaults if preferences can't be loaded
+        }
+      } catch (error) {
+        console.error("Error loading settings:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load settings. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [toast]);
+
+  // Listen for real-time updates
+  useBroadcastUpdates({
+    siteAdded: (data) => {
+      if (!data.site.groupId) {
+        setIndividualSites((prev) => [...prev, data.site]);
+        toast({
+          title: "Success",
+          description: "Site added successfully",
+        });
+      }
+    },
+    siteUpdated: (data) => {
+      if (!data.site.groupId) {
+        setIndividualSites((prev) =>
+          prev.map((s) => (s.id === data.site.id ? data.site : s))
+        );
+      }
+    },
+    siteDeleted: (data) => {
+      setIndividualSites((prev) => prev.filter((s) => s.id !== data.siteId));
+      toast({
+        title: "Success",
+        description: "Site removed successfully",
+      });
+    },
+    groupAdded: (data) => {
+      setGroups((prev) => [
+        ...prev,
+        { ...data.group, expanded: true, sites: [] },
+      ]);
+      toast({
+        title: "Success",
+        description: "Group created successfully",
+      });
+    },
+    groupUpdated: (data) => {
+      setGroups((prev) =>
+        prev.map((g) => (g.id === data.group.id ? data.group : g))
+      );
+    },
+    groupDeleted: (data) => {
+      setGroups((prev) => prev.filter((g) => g.id !== data.groupId));
+      toast({
+        title: "Success",
+        description: "Group deleted successfully",
+      });
+    },
+    siteAddedToGroup: (data) => {
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === data.group.id
+            ? { ...data.group, expanded: true }
+            : g
+        )
+      );
+    },
+    siteRemovedFromGroup: (data) => {
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === data.group.id ? { ...data.group, expanded: true } : g
+        )
+      );
+    },
+  });
 
   const toggleGroup = (groupId: string) => {
     setGroups(
@@ -119,70 +226,308 @@ const SettingsPage = () => {
     );
   };
 
-  const addMessage = () => {
-    if (newMessage.trim()) {
-      setMotivationalMessages([...motivationalMessages, newMessage.trim()]);
+  const addMessage = async () => {
+    if (!newMessage.trim()) return;
+
+    try {
+      setIsSaving(true);
+      const createdMessage = await api.addMessage(newMessage.trim());
+      setMotivationalMessages([...motivationalMessages, createdMessage]);
       setNewMessage("");
+      toast({
+        title: "Success",
+        description: "Message added successfully",
+      });
+    } catch (error) {
+      console.error("Error adding message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const removeMessage = (index: number) => {
-    setMotivationalMessages(motivationalMessages.filter((_, i) => i !== index));
+  const removeMessage = async (messageId: string) => {
+    try {
+      setIsSaving(true);
+      await api.deleteMessage(messageId);
+      setMotivationalMessages(
+        motivationalMessages.filter((m) => m.id !== messageId)
+      );
+      toast({
+        title: "Success",
+        description: "Message removed successfully",
+      });
+    } catch (error) {
+      console.error("Error removing message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleAddSite = (site: { name: string; timeLimit?: number; opensLimit?: number }) => {
-    const newSite: Site = {
-      id: `i${Date.now()}`,
-      name: site.name,
-      favicon: getFaviconEmoji(site.name),
-      timeLimit: site.timeLimit,
-      opensLimit: site.opensLimit,
-    };
-    setIndividualSites([...individualSites, newSite]);
+  const startEditingMessage = (message: any) => {
+    setEditingMessageId(message.id);
+    setEditingMessageText(message.text);
   };
 
-  const handleRemoveSite = (siteId: string) => {
-    setIndividualSites(individualSites.filter((s) => s.id !== siteId));
+  const saveEditingMessage = async () => {
+    if (!editingMessageText.trim() || !editingMessageId) return;
+
+    try {
+      setIsSaving(true);
+      await api.updateMessage(editingMessageId, { text: editingMessageText.trim() });
+      setMotivationalMessages(
+        motivationalMessages.map((m) =>
+          m.id === editingMessageId ? { ...m, text: editingMessageText.trim() } : m
+        )
+      );
+      setEditingMessageId(null);
+      setEditingMessageText("");
+      toast({
+        title: "Success",
+        description: "Message updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleCreateGroup = (groupData: { name: string; color: string; timeLimit: number; opensLimit: number }) => {
-    const newGroup: Group = {
-      id: `g${Date.now()}`,
-      name: groupData.name,
-      color: groupData.color,
-      timeLimit: groupData.timeLimit,
-      opensLimit: groupData.opensLimit,
-      sites: [],
-      expanded: true,
-    };
-    setGroups([...groups, newGroup]);
+  const cancelEditingMessage = () => {
+    setEditingMessageId(null);
+    setEditingMessageText("");
   };
 
-  const handleAddSiteToGroup = (siteName: string) => {
-    if (selectedGroupForAdd) {
-      const newSite: Site = {
-        id: `${selectedGroupForAdd.id}-${Date.now()}`,
+  const handleToggleRandomMessage = async (checked: boolean) => {
+    setShowRandomMessage(checked);
+    try {
+      await api.updateDisplayPreferences({
+        showRandomMessage: checked,
+        showActivitySuggestions: showActivitySuggestions,
+      });
+    } catch (error) {
+      console.error("Error updating preferences:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save preference. Please try again.",
+        variant: "destructive",
+      });
+      // Revert on error
+      setShowRandomMessage(!checked);
+    }
+  };
+
+  const handleToggleActivitySuggestions = async (checked: boolean) => {
+    setShowActivitySuggestions(checked);
+    try {
+      await api.updateDisplayPreferences({
+        showRandomMessage: showRandomMessage,
+        showActivitySuggestions: checked,
+      });
+    } catch (error) {
+      console.error("Error updating preferences:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save preference. Please try again.",
+        variant: "destructive",
+      });
+      // Revert on error
+      setShowActivitySuggestions(!checked);
+    }
+  };
+
+  const handleAddSite = async (site: {
+    name: string;
+    timeLimit?: number;
+    opensLimit?: number;
+  }) => {
+    try {
+      setIsSaving(true);
+      const newSite = await api.addSite({
+        name: site.name,
+        timeLimit: site.timeLimit,
+        opensLimit: site.opensLimit,
+      });
+      setIndividualSites([...individualSites, newSite]);
+      setAddSiteDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Site added successfully",
+      });
+    } catch (error) {
+      console.error("Error adding site:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add site. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRemoveSite = async (siteId: string) => {
+    try {
+      setIsSaving(true);
+      await api.deleteSite(siteId);
+      setIndividualSites(individualSites.filter((s) => s.id !== siteId));
+      toast({
+        title: "Success",
+        description: "Site removed successfully",
+      });
+    } catch (error) {
+      console.error("Error removing site:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove site. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCreateGroup = async (groupData: {
+    name: string;
+    color: string;
+    timeLimit: number;
+    opensLimit: number;
+  }) => {
+    try {
+      setIsSaving(true);
+
+      if (selectedGroupForEdit) {
+        // Edit existing group
+        const updatedGroup = await api.updateGroup(selectedGroupForEdit.id, {
+          name: groupData.name,
+          color: groupData.color,
+          timeLimit: groupData.timeLimit,
+          opensLimit: groupData.opensLimit,
+        });
+
+        setGroups(
+          groups.map((g) =>
+            g.id === selectedGroupForEdit.id ? { ...g, ...updatedGroup } : g
+          )
+        );
+
+        toast({
+          title: "Success",
+          description: "Group updated successfully",
+        });
+      } else {
+        // Create new group
+        const newGroup = await api.addGroup({
+          name: groupData.name,
+          color: groupData.color,
+          timeLimit: groupData.timeLimit,
+          opensLimit: groupData.opensLimit,
+        });
+        setGroups([
+          ...groups,
+          { ...newGroup, expanded: true, sites: [] },
+        ]);
+        toast({
+          title: "Success",
+          description: "Group created successfully",
+        });
+      }
+
+      setCreateGroupDialogOpen(false);
+      setSelectedGroupForEdit(null);
+    } catch (error) {
+      console.error("Error creating/editing group:", error);
+      toast({
+        title: "Error",
+        description: `Failed to ${selectedGroupForEdit ? "update" : "create"} group. Please try again.`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAddSiteToGroup = async (siteName: string) => {
+    if (!selectedGroupForAdd) return;
+
+    try {
+      setIsSaving(true);
+      // First add the site
+      const newSite = await api.addSite({
         name: siteName,
-        favicon: getFaviconEmoji(siteName),
-      };
+      });
+
+      // Then add it to the group
+      await api.addSiteToGroup(selectedGroupForAdd.id, newSite.id);
+
+      // Update local state
       setGroups(
         groups.map((g) =>
           g.id === selectedGroupForAdd.id
-            ? { ...g, sites: [...g.sites, newSite] }
+            ? { ...g, sites: [...(g.sites || []), newSite], expanded: true }
             : g
         )
       );
+
+      setAddToGroupDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Site added to group successfully",
+      });
+    } catch (error) {
+      console.error("Error adding site to group:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add site to group. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleRemoveSiteFromGroup = (groupId: string, siteId: string) => {
-    setGroups(
-      groups.map((g) =>
-        g.id === groupId
-          ? { ...g, sites: g.sites.filter((s) => s.id !== siteId) }
-          : g
-      )
-    );
+  const handleRemoveSiteFromGroup = async (groupId: string, siteId: string) => {
+    try {
+      setIsSaving(true);
+      await api.removeSiteFromGroup(groupId, siteId);
+
+      // Update local state
+      setGroups(
+        groups.map((g) =>
+          g.id === groupId
+            ? { ...g, sites: (g.sites || []).filter((s) => s.id !== siteId) }
+            : g
+        )
+      );
+
+      toast({
+        title: "Success",
+        description: "Site removed from group successfully",
+      });
+    } catch (error) {
+      console.error("Error removing site from group:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove site from group. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const openAddToGroupDialog = (group: Group) => {
@@ -190,20 +535,57 @@ const SettingsPage = () => {
     setAddToGroupDialogOpen(true);
   };
 
+  const handleDeleteGroup = async (groupId: string) => {
+    if (!window.confirm("Are you sure you want to delete this group? Sites in this group will become standalone.")) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await api.deleteGroup(groupId);
+      setGroups(groups.filter((g) => g.id !== groupId));
+      toast({
+        title: "Success",
+        description: "Group deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting group:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete group. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const openEditGroupDialog = (group: Group) => {
+    setSelectedGroupForEdit(group);
+    setCreateGroupDialogOpen(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen gradient-calm flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen gradient-calm">
       {/* Header */}
       <header className="sticky top-0 z-10 glass border-b border-border/50">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Logo size="md" />
-          <Button variant="outline" className="rounded-xl">
-            <Settings2 size={16} className="mr-2" />
-            Preferences
-          </Button>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-6 py-8 pb-20">
         <Tabs defaultValue="limits" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 rounded-2xl p-1 bg-muted/80">
             <TabsTrigger value="limits" className="rounded-xl">
@@ -236,7 +618,11 @@ const SettingsPage = () => {
                   className="pl-11 rounded-xl border-0 bg-card shadow-soft"
                 />
               </div>
-              <Button className="rounded-xl shadow-soft" onClick={() => setAddSiteDialogOpen(true)}>
+              <Button
+                className="rounded-xl shadow-soft"
+                onClick={() => setAddSiteDialogOpen(true)}
+                disabled={isSaving}
+              >
                 <Plus size={18} className="mr-2" />
                 Add site
               </Button>
@@ -277,7 +663,12 @@ const SettingsPage = () => {
                       </Badge>
                     )}
                     <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        disabled={isSaving}
+                      >
                         <Edit2 size={14} />
                       </Button>
                       <Button
@@ -285,6 +676,7 @@ const SettingsPage = () => {
                         size="icon"
                         className="h-8 w-8 text-destructive"
                         onClick={() => handleRemoveSite(site.id)}
+                        disabled={isSaving}
                       >
                         <Trash2 size={14} />
                       </Button>
@@ -329,7 +721,7 @@ const SettingsPage = () => {
                         {group.opensLimit}
                       </Badge>
                       <Badge variant="secondary" className="rounded-full">
-                        {group.sites.length} sites
+                        {(group.sites || []).length} sites
                       </Badge>
                       {group.expanded ? (
                         <ChevronDown size={18} />
@@ -339,7 +731,7 @@ const SettingsPage = () => {
                     </button>
                     {group.expanded && (
                       <div className="border-t bg-muted/30 p-3 space-y-2">
-                        {group.sites.map((site) => (
+                        {(group.sites || []).map((site) => (
                           <div
                             key={site.id}
                             className="flex items-center gap-3 p-2 rounded-xl hover:bg-card transition-colors group"
@@ -351,6 +743,7 @@ const SettingsPage = () => {
                               size="icon"
                               className="h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive"
                               onClick={() => handleRemoveSiteFromGroup(group.id, site.id)}
+                              disabled={isSaving}
                             >
                               <Trash2 size={12} />
                             </Button>
@@ -361,6 +754,7 @@ const SettingsPage = () => {
                           size="sm"
                           className="w-full border-dashed border rounded-xl text-muted-foreground"
                           onClick={() => openAddToGroupDialog(group)}
+                          disabled={isSaving}
                         >
                           <Plus size={14} className="mr-2" />
                           Add site to group
@@ -382,7 +776,11 @@ const SettingsPage = () => {
                   Create groups to share limits across related sites
                 </p>
               </div>
-              <Button className="rounded-xl shadow-soft" onClick={() => setCreateGroupDialogOpen(true)}>
+              <Button
+                className="rounded-xl shadow-soft"
+                onClick={() => setCreateGroupDialogOpen(true)}
+                disabled={isSaving}
+              >
                 <Plus size={18} className="mr-2" />
                 New group
               </Button>
@@ -401,10 +799,10 @@ const SettingsPage = () => {
                       <div className="flex-1">
                         <h3 className="font-semibold text-lg">{group.name}</h3>
                         <p className="text-sm text-muted-foreground mb-3">
-                          {group.sites.length} sites sharing limits
+                          {(group.sites || []).length} sites sharing limits
                         </p>
                         <div className="flex flex-wrap gap-2">
-                          {group.sites.map((site) => (
+                          {(group.sites || []).map((site) => (
                             <Badge
                               key={site.id}
                               variant="secondary"
@@ -413,8 +811,9 @@ const SettingsPage = () => {
                               <span>{site.favicon}</span>
                               {site.name}
                               <button
-                                className="ml-1 hover:bg-background rounded-full p-0.5"
+                                className="ml-1 hover:bg-background rounded-full p-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                                 onClick={() => handleRemoveSiteFromGroup(group.id, site.id)}
+                                disabled={isSaving}
                               >
                                 <Trash2 size={10} />
                               </button>
@@ -425,20 +824,21 @@ const SettingsPage = () => {
                             size="sm"
                             className="rounded-full h-6 text-xs"
                             onClick={() => openAddToGroupDialog(group)}
+                            disabled={isSaving}
                           >
                             <Plus size={12} className="mr-1" />
                             Add
                           </Button>
                         </div>
                       </div>
-                      <div className="text-right space-y-1">
-                        <div className="flex items-center gap-2 text-sm">
+                      <div className="flex-1 text-right space-y-1">
+                        <div className="flex items-center gap-2 text-sm justify-end">
                           <Clock size={14} className="text-muted-foreground" />
                           <span className="font-medium">
                             {group.timeLimit} min/day
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
+                        <div className="flex items-center gap-2 text-sm justify-end">
                           <MousePointerClick
                             size={14}
                             className="text-muted-foreground"
@@ -447,6 +847,28 @@ const SettingsPage = () => {
                             {group.opensLimit} opens/day
                           </span>
                         </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          onClick={() => openEditGroupDialog(group)}
+                          disabled={isSaving}
+                          title="Edit group"
+                        >
+                          <Edit2 size={16} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeleteGroup(group.id)}
+                          disabled={isSaving}
+                          title="Delete group"
+                        >
+                          <Trash2 size={16} />
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -474,29 +896,93 @@ const SettingsPage = () => {
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && addMessage()}
                     className="rounded-xl"
+                    disabled={isSaving}
                   />
-                  <Button onClick={addMessage} className="rounded-xl">
-                    <Plus size={18} />
+                  <Button
+                    onClick={addMessage}
+                    className="rounded-xl"
+                    disabled={isSaving || !newMessage.trim()}
+                  >
+                    {isSaving ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Plus size={18} />
+                    )}
                   </Button>
                 </div>
 
                 {/* Messages list */}
                 <div className="space-y-2">
-                  {motivationalMessages.map((message, index) => (
+                  {motivationalMessages.map((message) => (
                     <div
-                      key={index}
+                      key={message.id}
                       className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 group"
                     >
                       <Quote size={18} className="text-primary shrink-0" />
-                      <p className="flex-1">{message}</p>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 text-destructive"
-                        onClick={() => removeMessage(index)}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
+                      {editingMessageId === message.id ? (
+                        <Input
+                          value={editingMessageText}
+                          onChange={(e) => setEditingMessageText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveEditingMessage();
+                            if (e.key === "Escape") cancelEditingMessage();
+                          }}
+                          className="flex-1 rounded-xl"
+                          autoFocus
+                          disabled={isSaving}
+                        />
+                      ) : (
+                        <p className="flex-1 cursor-text" onClick={() => startEditingMessage(message)}>
+                          {message.text}
+                        </p>
+                      )}
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                        {editingMessageId === message.id ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-primary"
+                              onClick={saveEditingMessage}
+                              disabled={isSaving || !editingMessageText.trim()}
+                            >
+                              ✓
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground"
+                              onClick={cancelEditingMessage}
+                              disabled={isSaving}
+                            >
+                              ✕
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              onClick={() => startEditingMessage(message)}
+                              disabled={isSaving}
+                              title="Edit message"
+                            >
+                              <Edit2 size={14} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive"
+                              onClick={() => removeMessage(message.id)}
+                              disabled={isSaving}
+                              title="Delete message"
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -516,7 +1002,11 @@ const SettingsPage = () => {
                       Display a random message each time
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch
+                    checked={showRandomMessage}
+                    onCheckedChange={handleToggleRandomMessage}
+                    disabled={isSaving}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
@@ -525,7 +1015,11 @@ const SettingsPage = () => {
                       Display cards with things to do instead
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch
+                    checked={showActivitySuggestions}
+                    onCheckedChange={handleToggleActivitySuggestions}
+                    disabled={isSaving}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -538,18 +1032,28 @@ const SettingsPage = () => {
         open={addSiteDialogOpen}
         onOpenChange={setAddSiteDialogOpen}
         onAdd={handleAddSite}
+        isLoading={isSaving}
       />
       <CreateGroupDialog
         open={createGroupDialogOpen}
         onOpenChange={setCreateGroupDialogOpen}
         onCreate={handleCreateGroup}
+        initialGroup={selectedGroupForEdit || undefined}
+        isEditing={!!selectedGroupForEdit}
+        isLoading={isSaving}
       />
       <AddSiteToGroupDialog
         open={addToGroupDialogOpen}
         onOpenChange={setAddToGroupDialogOpen}
         groupName={selectedGroupForAdd?.name || ""}
         onAdd={handleAddSiteToGroup}
+        isLoading={isSaving}
       />
+
+      {/* Version footer - fixed at bottom */}
+      <footer className="fixed bottom-0 left-0 right-0 text-center py-3 text-xs text-muted-foreground bg-background">
+        Distraction Limiter {version && `v${version}`}
+      </footer>
     </div>
   );
 };

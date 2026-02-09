@@ -75,24 +75,6 @@ const Index = () => {
             {/* Popup preview in browser mockup */}
             <div className="flex justify-center">
               <div className="relative">
-                {/* Browser extension area mockup */}
-                <Card className="p-4 bg-muted/30 rounded-3xl">
-                  <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
-                    <div className="flex gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-red-400" />
-                      <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                      <div className="w-3 h-3 rounded-full bg-green-400" />
-                    </div>
-                    <div className="flex-1 mx-4">
-                      <div className="bg-white rounded-lg px-4 py-2 text-sm text-muted-foreground">
-                        {popupVariant === "limited" ? "facebook.com" : "example.com"}
-                      </div>
-                    </div>
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center">
-                      <span className="text-white text-xs">🌿</span>
-                    </div>
-                  </div>
-                  
                   <PluginPopup 
                     isLimited={popupVariant === "limited"}
                     siteName="facebook.com"
@@ -102,7 +84,6 @@ const Index = () => {
                     opensUsed={3}
                     opensLimit={10}
                   />
-                </Card>
               </div>
             </div>
           </TabsContent>

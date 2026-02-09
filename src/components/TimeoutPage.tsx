@@ -1,8 +1,20 @@
 import { useState, useEffect } from "react";
-import { BookOpen, Droplets, TreePine, Phone, Brain, Coffee, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  BookOpen,
+  Droplets,
+  TreePine,
+  Phone,
+  Brain,
+  Coffee,
+  ChevronLeft,
+  ChevronRight,
+  Shuffle,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Logo from "./Logo";
+import * as api from "@/lib/api";
 
 const suggestions = [
   {
@@ -43,7 +55,7 @@ const suggestions = [
   },
 ];
 
-const quotes = [
+const defaultQuotes = [
   "Take a deep breath and go for a short walk 🚶",
   "How about reading that book you've been meaning to start? 📚",
   "Drink some water and stretch your body 💧",
@@ -51,22 +63,110 @@ const quotes = [
   "Try 5 minutes of meditation to clear your mind 🧘",
 ];
 
-interface TimeoutPageProps {
-  siteName?: string;
-  groupName?: string;
-  resetTime?: string;
-  limitType?: "time" | "opens";
-}
+const TimeoutPage = () => {
+  // URL params
+  const [blockedUrl, setBlockedUrl] = useState<string>("");
+  const [siteName, setSiteName] = useState<string>("this site");
+  const [limitType, setLimitType] = useState<"time" | "opens">("time");
+  const [blockingReason, setBlockingReason] = useState<string>(
+    "You've reached your daily limit"
+  );
+  const [resetTime, setResetTime] = useState<string>("tomorrow");
 
-const TimeoutPage = ({
-  siteName = "facebook.com",
-  groupName = "Social Media",
-  resetTime = "12:00 AM",
-  limitType = "time",
-}: TimeoutPageProps) => {
+  // UI state
   const [currentQuote, setCurrentQuote] = useState(0);
   const [currentSuggestion, setCurrentSuggestion] = useState(0);
   const [breatheIn, setBreatheIn] = useState(true);
+  const [quotes, setQuotes] = useState<string[]>(defaultQuotes);
+  const [isLoadingQuote, setIsLoadingQuote] = useState(false);
+  const [showRandomMessage, setShowRandomMessage] = useState(true);
+  const [showActivitySuggestions, setShowActivitySuggestions] = useState(true);
+
+  // Parse URL params and load data
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    const url = params.get("blockedUrl") || "";
+    const reason = params.get("reason") || "You've reached your daily limit";
+    const type = (params.get("limitType") as "time" | "opens") || "time";
+
+    setBlockedUrl(url);
+    setBlockingReason(reason);
+    setLimitType(type);
+
+    // Extract site name from URL
+    if (url) {
+      try {
+        const urlObj = new URL(url);
+        setSiteName(urlObj.hostname);
+      } catch {
+        setSiteName(url);
+      }
+    }
+
+    // Calculate reset time (midnight)
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const timeString = tomorrow.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    setResetTime(timeString);
+
+    // Load timeout notes and display preferences
+    loadQuotes();
+    loadDisplayPreferences();
+  }, []);
+
+  const loadDisplayPreferences = async () => {
+    try {
+      const prefs = await api.getDisplayPreferences();
+      if (prefs) {
+        setShowRandomMessage(prefs.showRandomMessage !== false);
+        setShowActivitySuggestions(prefs.showActivitySuggestions !== false);
+      }
+    } catch (error) {
+      console.warn("Could not load display preferences:", error);
+      // Use defaults on error - both will be true by default
+    }
+  };
+
+  const loadQuotes = async () => {
+    try {
+      setIsLoadingQuote(true);
+      const messages = await api.getMessages();
+      if (messages && messages.length > 0) {
+        const texts = messages.map((m) => m.text || m);
+        setQuotes(texts);
+        setCurrentQuote(0);
+      }
+    } catch (error) {
+      console.error("Error loading quotes:", error);
+      // Use default quotes on error
+      setQuotes(defaultQuotes);
+    } finally {
+      setIsLoadingQuote(false);
+    }
+  };
+
+  const shuffleQuote = async () => {
+    try {
+      setIsLoadingQuote(true);
+      const message = await api.getRandomTimeoutNote();
+      if (message) {
+        const newText = message.text || message;
+        setQuotes([newText]);
+        setCurrentQuote(0);
+      }
+    } catch (error) {
+      console.error("Error getting random quote:", error);
+    } finally {
+      setIsLoadingQuote(false);
+    }
+  };
 
   useEffect(() => {
     // Breathing animation
@@ -134,28 +234,44 @@ const TimeoutPage = ({
         </div>
 
         {/* Main motivational quote - Most prominent */}
-        <div className="max-w-2xl w-full text-center mb-10">
-          <p className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground leading-tight">
-            {quotes[currentQuote]}
-          </p>
-          {/* Quote dots */}
-          <div className="flex justify-center gap-2 mt-8">
-            {quotes.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentQuote(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentQuote
-                    ? "bg-primary w-6"
-                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                }`}
-              />
-            ))}
+        {showRandomMessage && (
+          <div className="max-w-2xl w-full text-center mb-10">
+            <p className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground leading-tight">
+              {quotes[currentQuote]}
+            </p>
+            {/* Quote dots and shuffle button */}
+            <div className="flex justify-center gap-2 mt-8 items-center">
+              {quotes.length > 1 && quotes.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentQuote(index)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    index === currentQuote
+                      ? "bg-primary w-6"
+                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                  }`}
+                />
+              ))}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={shuffleQuote}
+                disabled={isLoadingQuote}
+                className="ml-4"
+              >
+                {isLoadingQuote ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Shuffle size={18} />
+                )}
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Suggestions carousel */}
-        <div className="w-full max-w-3xl mb-12">
+        {showActivitySuggestions && (
+          <div className="w-full max-w-3xl mb-12">
           <p className="text-center text-muted-foreground mb-4 font-medium">
             What you could do instead...
           </p>
@@ -201,15 +317,15 @@ const TimeoutPage = ({
             </Button>
           </div>
         </div>
+        )}
 
         {/* Limit info - Bottom of page */}
         <div className="text-center text-muted-foreground">
-          <p className="text-sm">
-            You've reached your {limitType === "time" ? "time" : "opens"} limit for{" "}
-            <span className="font-semibold text-foreground">{groupName}</span>
+          <p className="text-sm font-medium text-foreground mb-2">
+            {blockingReason}
           </p>
-          <p className="text-xs mt-1">
-            Including {siteName} • Resets at {resetTime}
+          <p className="text-xs">
+            {siteName} • Resets at {resetTime}
           </p>
         </div>
       </div>

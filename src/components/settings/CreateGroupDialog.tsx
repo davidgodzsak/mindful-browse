@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Clock, MousePointerClick } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,8 @@ interface CreateGroupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreate: (group: { name: string; color: string; timeLimit: number; opensLimit: number }) => void;
+  initialGroup?: { id: string; name: string; color: string; timeLimit: number; opensLimit?: number };
+  isEditing?: boolean;
 }
 
 const colorOptions = [
@@ -27,35 +29,64 @@ const colorOptions = [
   { name: "Pink", value: "bg-pink-500" },
 ];
 
-const CreateGroupDialog = ({ open, onOpenChange, onCreate }: CreateGroupDialogProps) => {
-  const [groupName, setGroupName] = useState("");
-  const [selectedColor, setSelectedColor] = useState("bg-blue-500");
-  const [timeLimit, setTimeLimit] = useState("30");
-  const [opensLimit, setOpensLimit] = useState("10");
+const CreateGroupDialog = ({ open, onOpenChange, onCreate, initialGroup, isEditing }: CreateGroupDialogProps) => {
+  const [groupName, setGroupName] = useState(initialGroup?.name || "");
+  const [selectedColor, setSelectedColor] = useState(initialGroup?.color || "bg-blue-500");
+  const [timeLimit, setTimeLimit] = useState((initialGroup?.timeLimit || 30).toString());
+  const [opensLimit, setOpensLimit] = useState((initialGroup?.opensLimit || "").toString());
+
+  // Update form when dialog opens with initialGroup data
+  useEffect(() => {
+    if (open) {
+      if (initialGroup) {
+        setGroupName(initialGroup.name);
+        setSelectedColor(initialGroup.color);
+        setTimeLimit(initialGroup.timeLimit.toString());
+        setOpensLimit((initialGroup.opensLimit || "").toString());
+      } else {
+        // Reset form for create mode
+        setGroupName("");
+        setSelectedColor("bg-blue-500");
+        setTimeLimit("30");
+        setOpensLimit("");
+      }
+    }
+  }, [open, initialGroup]);
 
   const handleCreate = () => {
-    if (groupName.trim()) {
-      onCreate({
-        name: groupName.trim(),
-        color: selectedColor,
-        timeLimit: parseInt(timeLimit) || 30,
-        opensLimit: parseInt(opensLimit) || 10,
-      });
-      setGroupName("");
-      setSelectedColor("bg-blue-500");
-      setTimeLimit("30");
-      setOpensLimit("10");
-      onOpenChange(false);
+    if (!groupName.trim()) {
+      return;
     }
+
+    const parsedTimeLimit = timeLimit ? parseInt(timeLimit) : undefined;
+    const parsedOpensLimit = opensLimit ? parseInt(opensLimit) : undefined;
+
+    // Ensure at least one limit is set
+    if (!parsedTimeLimit && !parsedOpensLimit) {
+      alert("Please set at least a time limit or an opens limit");
+      return;
+    }
+
+    onCreate({
+      name: groupName.trim(),
+      color: selectedColor,
+      timeLimit: parsedTimeLimit || 30, // Default to 30 if no time limit provided but opens limit exists
+      opensLimit: parsedOpensLimit, // Can be undefined
+    });
+    setGroupName("");
+    setSelectedColor("bg-blue-500");
+    setTimeLimit("30");
+    setOpensLimit("");
+    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Create New Group</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Group" : "Create New Group"}</DialogTitle>
           <DialogDescription>
-            Create a group to share limits across multiple sites.
+            {isEditing ? "Update the group settings." : "Create a group to share limits across multiple sites."}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -123,9 +154,19 @@ const CreateGroupDialog = ({ open, onOpenChange, onCreate }: CreateGroupDialogPr
           <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={!groupName.trim()} className="rounded-xl">
-            <Plus size={16} className="mr-2" />
-            Create Group
+          <Button
+            onClick={handleCreate}
+            disabled={!groupName.trim() || (!timeLimit && !opensLimit)}
+            className="rounded-xl"
+          >
+            {isEditing ? (
+              <>Update Group</>
+            ) : (
+              <>
+                <Plus size={16} className="mr-2" />
+                Create Group
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

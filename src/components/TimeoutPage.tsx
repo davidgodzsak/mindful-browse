@@ -152,19 +152,11 @@ const TimeoutPage = () => {
     }
   };
 
-  const shuffleQuote = async () => {
-    try {
-      setIsLoadingQuote(true);
-      const message = await api.getRandomTimeoutNote();
-      if (message) {
-        const newText = message.text || message;
-        setQuotes([newText]);
-        setCurrentQuote(0);
-      }
-    } catch (error) {
-      console.error("Error getting random quote:", error);
-    } finally {
-      setIsLoadingQuote(false);
+  const shuffleQuote = () => {
+    // Pick a random quote from the current pool
+    if (quotes.length > 0) {
+      const randomIndex = Math.floor(Math.random() * quotes.length);
+      setCurrentQuote(randomIndex);
     }
   };
 
@@ -239,33 +231,38 @@ const TimeoutPage = () => {
             <p className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground leading-tight">
               {quotes[currentQuote]}
             </p>
-            {/* Quote dots and shuffle button */}
-            <div className="flex justify-center gap-2 mt-8 items-center">
-              {quotes.length > 1 && quotes.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentQuote(index)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    index === currentQuote
-                      ? "bg-primary w-6"
-                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                  }`}
-                />
-              ))}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={shuffleQuote}
-                disabled={isLoadingQuote}
-                className="ml-4"
-              >
-                {isLoadingQuote ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <Shuffle size={18} />
-                )}
-              </Button>
-            </div>
+            {/* Quote dots */}
+            {quotes.length > 1 && (
+              <div className="flex justify-center gap-3 mt-8 mb-4">
+                {quotes.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentQuote(index)}
+                    className={`rounded-full transition-all ${
+                      index === currentQuote
+                        ? "bg-primary w-3 h-3"
+                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-2.5 h-2.5"
+                    }`}
+                    title={`Quote ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Randomize button */}
+            <Button
+              variant="outline"
+              onClick={shuffleQuote}
+              disabled={isLoadingQuote}
+              className="rounded-full"
+            >
+              {isLoadingQuote ? (
+                <Loader2 size={16} className="animate-spin mr-2" />
+              ) : (
+                <Shuffle size={16} className="mr-2" />
+              )}
+              Random
+            </Button>
           </div>
         )}
 

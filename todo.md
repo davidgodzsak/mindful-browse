@@ -3,18 +3,20 @@
 ## Bugs
 
 ### Timeout page
--[ ] Randomize with default suggestions not working
--[ ] Randomize button makes the dots that show different quotes disappear. Also Randomize button should be a bit bigger and be below the dots, not inline.
--[ ] Hard to click the dots to select a new message
--[ ] Both the Big message and the carousel of messages does not really make sense
+-[x] Randomize with default suggestions not working
+-[x] Randomize button makes the dots that show different quotes disappear. Also Randomize button should be a bit bigger and be below the dots, not inline.
+-[x] Hard to click the dots to select a new message
+-[x] Both the Big message and the carousel of messages does not really make sense
+-[ ] When randomizing or changing the displayed message, and the new text has a different number of lines than the previous then the rest of the page "jumps". Let's allocate 4-5 lines for the text and have the dots, the random button and all content below that fixed so even if the number of lines change, it does not move around.
 
 ### Settings page
 -[x] Editing individual site does not work, when clicking on the edit icon nothing happens it should show the same dialog as the create, but prefilled
--[ ] Limit tab -> Add site button should be inside individual sites title line, not next to the searchbar
--[ ] Limit tab -> searchbar not working it should filter both individual sites and groups (expand the group if it contains a match)
--[~] Groups tab -> Edit group when removing open or time limit and then clicking update group button, it does not store the changes (it should be required to add either time or open limit, but not required both at once)
+-[x] Limit tab -> Add site button should be inside individual sites title line, not next to the searchbar
+-[x] Limit tab -> searchbar not working it should filter both individual sites and groups (expand the group if it contains a match)
+-[x] Groups tab -> Edit group when removing open or time limit and then clicking update group button, it does not store the changes (it should be required to add either time or open limit, but not required both at once)
 -[x] Limits tab -> when adding a new item to a group then it adds an empty item to the individual sites as well, when refreshing the page then htey disappear
--[ ] Limit tab -> Add new site dialog -> Let's remove the quick presets, not needed 
+-[x] Limit tab -> Add new site dialog -> Let's remove the quick presets, not needed 
+-[ ] Groups tab -> When removing the value from the time or open limit and clicking update nothing seems to happen, when I refresh the page then the limit is gone, but the text and icon are there e.g. "opens/day" without a value, we should not show the limit (either open or time) when there is no value set, also we should update the card after saving the changes so we don't need to refresh the page to let the user know the changes have been stored. Also on the Limit tab, where we show the groups we should not show the pill for the limit config that is not set
 
 ### Popup
 - [ ] Quick presets should have 2 lines, one for adding time limit, one for adding opens limit

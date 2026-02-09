@@ -113,24 +113,6 @@ const AddSiteDialog = ({ open, onOpenChange, onAdd, initialSite, isEditing }: Ad
               />
             </div>
           </div>
-          {/* Quick presets */}
-          <div className="space-y-2">
-            <Label>Quick presets</Label>
-            <div className="flex flex-wrap gap-2">
-              {[15, 30, 45, 60].map((mins) => (
-                <Button
-                  key={mins}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full"
-                  onClick={() => setTimeLimit(mins.toString())}
-                >
-                  {mins} min
-                </Button>
-              ))}
-            </div>
-          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">

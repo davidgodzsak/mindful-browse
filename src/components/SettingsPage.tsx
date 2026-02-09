@@ -236,6 +236,38 @@ const SettingsPage = () => {
     );
   };
 
+  // Filter logic for search
+  const getFilteredSites = () => {
+    if (!searchQuery.trim()) return individualSites;
+    const query = searchQuery.toLowerCase();
+    return individualSites.filter((site) =>
+      site.name.toLowerCase().includes(query)
+    );
+  };
+
+  const getFilteredGroups = () => {
+    if (!searchQuery.trim()) return groups;
+    const query = searchQuery.toLowerCase();
+    return groups.map((group) => {
+      const matchesGroupName = group.name.toLowerCase().includes(query);
+      const matchingSites = (group.sites || []).filter((site) =>
+        site.name.toLowerCase().includes(query)
+      );
+
+      // If group name matches or any site matches, include the group
+      if (matchesGroupName || matchingSites.length > 0) {
+        return {
+          ...group,
+          // Expand group if it has matching sites and search is active
+          expanded: matchingSites.length > 0 ? true : group.expanded,
+          // Show only matching sites
+          sites: matchingSites.length > 0 ? matchingSites : group.sites,
+        };
+      }
+      return null;
+    }).filter((g): g is Group => g !== null);
+  };
+
   const addMessage = async () => {
     if (!newMessage.trim()) return;
 
@@ -635,42 +667,43 @@ const SettingsPage = () => {
 
           {/* Limits Tab */}
           <TabsContent value="limits" className="space-y-6">
-            {/* Search & Add */}
-            <div className="flex gap-3">
-              <div className="relative flex-1">
-                <Search
-                  size={18}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
-                />
-                <Input
-                  placeholder="Search sites..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-11 rounded-xl border-0 bg-card shadow-soft"
-                />
-              </div>
-              <Button
-                className="rounded-xl shadow-soft"
-                onClick={() => setAddSiteDialogOpen(true)}
-                disabled={isSaving}
-              >
-                <Plus size={18} className="mr-2" />
-                Add site
-              </Button>
+            {/* Search bar */}
+            <div className="relative">
+              <Search
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                placeholder="Search sites and groups..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-11 rounded-xl border-0 bg-card shadow-soft"
+              />
             </div>
 
             {/* Individual Sites */}
             <Card className="shadow-soft border-0">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  Individual Sites
-                  <Badge variant="secondary" className="rounded-full">
-                    {individualSites.length}
-                  </Badge>
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg">Individual Sites</CardTitle>
+                    <Badge variant="secondary" className="rounded-full">
+                      {individualSites.length}
+                    </Badge>
+                  </div>
+                  <Button
+                    className="rounded-xl"
+                    size="sm"
+                    onClick={() => setAddSiteDialogOpen(true)}
+                    disabled={isSaving}
+                  >
+                    <Plus size={16} className="mr-2" />
+                    Add site
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-2">
-                {individualSites.map((site) => (
+                {getFilteredSites().map((site) => (
                   <div
                     key={site.id}
                     className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors group"
@@ -719,6 +752,7 @@ const SettingsPage = () => {
             </Card>
 
             {/* Groups Overview */}
+            {getFilteredGroups().length > 0 && (
             <Card className="shadow-soft border-0">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -729,7 +763,7 @@ const SettingsPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {groups.map((group) => (
+                {getFilteredGroups().map((group) => (
                   <div
                     key={group.id}
                     className="rounded-2xl border bg-card overflow-hidden"
@@ -797,6 +831,7 @@ const SettingsPage = () => {
                 ))}
               </CardContent>
             </Card>
+            )}
           </TabsContent>
 
           {/* Groups Tab */}

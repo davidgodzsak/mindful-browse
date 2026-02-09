@@ -27,6 +27,10 @@ const PluginPopup = () => {
   const [opensUsed, setOpensUsed] = useState(0);
   const [opensLimit, setOpensLimit] = useState(0);
 
+  // Preset selection state
+  const [selectedTimeLimit, setSelectedTimeLimit] = useState<number | null>(null);
+  const [selectedOpensLimit, setSelectedOpensLimit] = useState<number | null>(null);
+
   // Load current page info on mount
   useEffect(() => {
     const loadPageInfo = async () => {
@@ -105,14 +109,63 @@ const PluginPopup = () => {
     },
   });
 
-  const handleQuickLimit = async (minutes: number) => {
+  // Periodic update of remaining time on limited sites
+  useEffect(() => {
+    if (!isLimited) return;
+
+    const updateInterval = setInterval(async () => {
+      try {
+        const pageInfo = await api.getCurrentPageInfo();
+        if (pageInfo.isDistractingSite && pageInfo.siteInfo) {
+          const limitSeconds = pageInfo.siteInfo.dailyLimitSeconds || 0;
+          const limitMinutes = limitSeconds > 0 ? Math.ceil(limitSeconds / 60) : 0;
+          const usedMinutes = Math.ceil((pageInfo.siteInfo.todaySeconds || 0) / 60);
+          setTimeLimit(limitMinutes);
+          setTimeUsed(usedMinutes);
+        }
+      } catch (error) {
+        console.warn("Could not update time remaining:", error);
+      }
+    }, 30000); // Update every 30 seconds
+
+    return () => clearInterval(updateInterval);
+  }, [isLimited]);
+
+  const handleSelectTimeLimit = (minutes: number) => {
+    setSelectedTimeLimit(selectedTimeLimit === minutes ? null : minutes);
+  };
+
+  const handleSelectOpensLimit = (opens: number) => {
+    setSelectedOpensLimit(selectedOpensLimit === opens ? null : opens);
+  };
+
+  const handleAddLimit = async () => {
+    if (!selectedTimeLimit && !selectedOpensLimit) {
+      toast({
+        title: "Error",
+        description: "Please select at least one limit type",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsSaving(true);
-      await api.addQuickLimit(siteName, minutes * 60);
+      if (selectedTimeLimit) {
+        await api.addQuickLimit(siteName, selectedTimeLimit * 60);
+      }
+      // Opens limits would need a separate API endpoint
+      // For now, opens limits are only available in settings
+
       toast({
         title: "Success",
-        description: `${minutes} minute limit added for ${siteName}`,
+        description: `Limit added for ${siteName}`,
       });
+
+      // Reset selection
+      setSelectedTimeLimit(null);
+      setSelectedOpensLimit(null);
+
       // Refresh page info
       const pageInfo = await api.getCurrentPageInfo();
       if (pageInfo.isDistractingSite && pageInfo.siteInfo) {
@@ -124,7 +177,7 @@ const PluginPopup = () => {
         setTimeUsed(usedMinutes);
       }
     } catch (error) {
-      console.error("Error adding quick limit:", error);
+      console.error("Error adding limit:", error);
       toast({
         title: "Error",
         description: "Failed to add limit. Please try again.",
@@ -196,61 +249,91 @@ const PluginPopup = () => {
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-muted-foreground mb-5">
             Add limits to stay mindful while browsing this site.
           </p>
 
-          <div className="space-y-3">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Quick presets
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {[15, 30, 60].map((minutes) => (
-                <Button
-                  key={minutes}
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl border-primary/30 hover:bg-primary/10 hover:border-primary"
-                  onClick={() => handleQuickLimit(minutes)}
-                  disabled={isSaving}
-                >
-                  {minutes === 60 ? "1 hour" : `${minutes} min`}
-                </Button>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <Button
-                className="rounded-xl"
-                size="sm"
-                onClick={() => handleQuickLimit(30)}
-                disabled={isSaving}
-              >
-                <Clock size={14} className="mr-1.5" />
+          <div className="space-y-4">
+            {/* Time limit presets */}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
                 Time limit
-              </Button>
-              <Button
-                variant="secondary"
-                className="rounded-xl"
-                size="sm"
-                disabled={true}
-              >
-                <MousePointerClick size={14} className="mr-1.5" />
-                Opens limit
-              </Button>
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {[15, 30, 60].map((minutes) => (
+                  <Button
+                    key={minutes}
+                    variant={selectedTimeLimit === minutes ? "default" : "outline"}
+                    size="sm"
+                    className={`rounded-xl ${
+                      selectedTimeLimit === minutes
+                        ? ""
+                        : "border-primary/30 hover:bg-primary/10 hover:border-primary"
+                    }`}
+                    onClick={() => handleSelectTimeLimit(minutes)}
+                    disabled={isSaving}
+                  >
+                    {minutes === 60 ? "1h" : `${minutes}m`}
+                  </Button>
+                ))}
+              </div>
             </div>
 
-            <div className="pt-2">
-              <Button
-                variant="outline"
-                className="w-full rounded-xl border-dashed"
-                size="sm"
-                disabled={true}
-              >
-                <Plus size={14} className="mr-1.5" />
-                Add to group
-              </Button>
+            {/* Opens limit presets */}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                Opens limit
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {[5, 10, 20].map((opens) => (
+                  <Button
+                    key={opens}
+                    variant={selectedOpensLimit === opens ? "default" : "outline"}
+                    size="sm"
+                    className={`rounded-xl ${
+                      selectedOpensLimit === opens
+                        ? ""
+                        : "border-primary/30 hover:bg-primary/10 hover:border-primary"
+                    }`}
+                    onClick={() => handleSelectOpensLimit(opens)}
+                    disabled={isSaving}
+                  >
+                    {opens}
+                  </Button>
+                ))}
+              </div>
             </div>
+
+            {/* Add limit button */}
+            <Button
+              className="w-full rounded-xl"
+              size="sm"
+              onClick={handleAddLimit}
+              disabled={isSaving || (!selectedTimeLimit && !selectedOpensLimit)}
+            >
+              <Plus size={14} className="mr-1.5" />
+              Add limit
+            </Button>
+
+            {/* Divider */}
+            <div className="relative py-2">
+              <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
+              <div className="relative flex justify-center">
+                <span className="px-2 bg-card text-xs text-muted-foreground">or</span>
+              </div>
+            </div>
+
+            {/* Add to group button */}
+            <Button
+              variant="outline"
+              className="w-full rounded-xl"
+              size="sm"
+              onClick={handleOpenSettings}
+              disabled={isSaving}
+            >
+              <Plus size={14} className="mr-1.5" />
+              Add to group
+            </Button>
           </div>
         </CardContent>
       </Card>

@@ -228,7 +228,7 @@ const TimeoutPage = () => {
         {/* Main motivational quote - Most prominent */}
         {showRandomMessage && (
           <div className="max-w-2xl w-full text-center mb-10">
-            <p className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground leading-tight">
+            <p className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground leading-tight min-h-[200px] flex justify-center">
               {quotes[currentQuote]}
             </p>
             {/* Quote dots */}

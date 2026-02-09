@@ -778,14 +778,18 @@ const SettingsPage = () => {
                       <span className="font-semibold flex-1 text-left">
                         {group.name}
                       </span>
-                      <Badge variant="outline" className="rounded-full gap-1">
-                        <Clock size={12} />
-                        {group.timeLimit} min
-                      </Badge>
-                      <Badge variant="outline" className="rounded-full gap-1">
-                        <MousePointerClick size={12} />
-                        {group.opensLimit}
-                      </Badge>
+                      {group.timeLimit > 0 && (
+                        <Badge variant="outline" className="rounded-full gap-1">
+                          <Clock size={12} />
+                          {group.timeLimit} min
+                        </Badge>
+                      )}
+                      {group.opensLimit > 0 && (
+                        <Badge variant="outline" className="rounded-full gap-1">
+                          <MousePointerClick size={12} />
+                          {group.opensLimit}
+                        </Badge>
+                      )}
                       <Badge variant="secondary" className="rounded-full">
                         {(group.sites || []).length} sites
                       </Badge>
@@ -899,21 +903,25 @@ const SettingsPage = () => {
                         </div>
                       </div>
                       <div className="flex-1 text-right space-y-1">
-                        <div className="flex items-center gap-2 text-sm justify-end">
-                          <Clock size={14} className="text-muted-foreground" />
-                          <span className="font-medium">
-                            {group.timeLimit} min/day
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm justify-end">
-                          <MousePointerClick
-                            size={14}
-                            className="text-muted-foreground"
-                          />
-                          <span className="font-medium">
-                            {group.opensLimit} opens/day
-                          </span>
-                        </div>
+                        {group.timeLimit > 0 && (
+                          <div className="flex items-center gap-2 text-sm justify-end">
+                            <Clock size={14} className="text-muted-foreground" />
+                            <span className="font-medium">
+                              {group.timeLimit} min/day
+                            </span>
+                          </div>
+                        )}
+                        {group.opensLimit > 0 && (
+                          <div className="flex items-center gap-2 text-sm justify-end">
+                            <MousePointerClick
+                              size={14}
+                              className="text-muted-foreground"
+                            />
+                            <span className="font-medium">
+                              {group.opensLimit} opens/day
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-col gap-2">
                         <Button

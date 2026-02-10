@@ -219,13 +219,23 @@ export async function updateGroup(
   if (updates.color !== undefined) {
     backendUpdates.color = updates.color;
   }
-  // Handle timeLimit - it can be undefined (don't update) or a number (set)
+  // Handle timeLimit - it can be undefined (don't update), 0/falsy (remove), or a number (set)
   if ('timeLimit' in updates) {
-    backendUpdates.dailyLimitSeconds = updates.timeLimit && updates.timeLimit > 0 ? updates.timeLimit * 60 : null;
+    if (updates.timeLimit && updates.timeLimit > 0) {
+      backendUpdates.dailyLimitSeconds = updates.timeLimit * 60;
+    } else {
+      // Remove limit if 0, falsy, or explicitly undefined
+      backendUpdates.dailyLimitSeconds = null;
+    }
   }
-  // Handle opensLimit - it can be undefined (don't update) or a number (set)
+  // Handle opensLimit - it can be undefined (don't update), 0/falsy (remove), or a number (set)
   if ('opensLimit' in updates) {
-    backendUpdates.dailyOpenLimit = updates.opensLimit && updates.opensLimit > 0 ? updates.opensLimit : null;
+    if (updates.opensLimit && updates.opensLimit > 0) {
+      backendUpdates.dailyOpenLimit = updates.opensLimit;
+    } else {
+      // Remove limit if 0, falsy, or explicitly undefined
+      backendUpdates.dailyOpenLimit = null;
+    }
   }
   if (updates.isEnabled !== undefined) {
     backendUpdates.isEnabled = updates.isEnabled;

@@ -16,7 +16,8 @@
 - [x] Groups tab -> Edit group when removing open or time limit and then clicking update group button, it does not store the changes (it should be required to add either time or open limit, but not required both at once)
 - [x] Limits tab -> when adding a new item to a group then it adds an empty item to the individual sites as well, when refreshing the page then htey disappear
 - [x] Limit tab -> Add new site dialog -> Let's remove the quick presets, not needed
-- [ ] Groups tab -> When removing the value from the time or open limit and clicking update nothing seems to happen, when I refresh the page then the limit is gone, we should update the card after saving the changes so we don't need to refresh the page manually to let the user know the changes have been stored.
+- [x] Groups tab -> When removing the value from the time or open limit and clicking update nothing seems to happen, when I refresh the page then the limit is gone, we should update the card after saving the changes so we don't need to refresh the page manually to let the user know the changes have been stored.
+- [ ] Groups tab -> It's not possible to remove the time limit. When I remove the value from the input and update the group the time limit does not disappear. It should be possible to remove the time limit and only have a limit on number of opens instead (but at least one of hte two limits should be added)
 
 ### Popup
 
@@ -25,8 +26,9 @@
 - [x] It should have a working "add to group". The "add to group" button should be below "add limit" button divided by a ----- OR ------
 - [x] The time limit and open limit preset buttons should not add the page limit immediately, they are there only to pick the value (the selection should be also highlighted by changing the button state, so it's visible which one is selected) and it should only add the limit when the "add limit" button is clicked, or it should disregard the selected limits and just add to a group whne "add to group" is clicked
 - [x] The remaining time limit should be updated every 30 seconds on a limited site, to make sure it shows a close to real time value even when open for longer
-- [ ] Add to group should show a selector where the options are the available groups. When selecting an option it should add the page to the group and have the popup to refresh to show the limit
-- [ ] When we select an open and a time limit for a page in the popup quick add -> it should store both of the limits. Currently it only stores the limit for the time.
+- [x] Add to group should show a selector where the options are the available groups. When selecting an option it should add the page to the group and have the popup to refresh to show the limit
+- [x] When we select an open and a time limit for a page in the popup quick add -> it should store both of the limits. Currently it only stores the limit for the time.
+- [x] When I click add to group for a non-limited site and click on a specific group's button nothing happens. It does not add the site to the group. It should add it and refresh the popup to show the correct state of the group.
 
 ## Improvements
 
@@ -41,6 +43,9 @@
 
 ### Settings page
 - [ ] be able to turn limits on or off by having a "switch" button next to each page in the limits tab (even on pages individually that are in a group) (reuse the one in the settings -> messages tab -> display options)
+
+### Timeout page
+- [ ] when opening the timeout page randomize the order of the displayed messages (don't shuffle them in the storage) so we always see a different order when opening it, not always the same.
 
 ### Statistic pages
 - [ ] Track how much time we spend on each site and how many times we open each site

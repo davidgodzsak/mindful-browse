@@ -475,17 +475,20 @@ const SettingsPage = () => {
 
       if (selectedGroupForEdit) {
         // Edit existing group
-        const updatedGroup = await api.updateGroup(selectedGroupForEdit.id, {
+        await api.updateGroup(selectedGroupForEdit.id, {
           name: groupData.name,
           color: groupData.color,
           timeLimit: groupData.timeLimit,
           opensLimit: groupData.opensLimit,
         });
 
+        // Refetch groups to ensure UI shows latest data (especially for removed limits)
+        const updatedGroupsList = await api.getGroups();
         setGroups(
-          groups.map((g) =>
-            g.id === selectedGroupForEdit.id ? { ...g, ...updatedGroup } : g
-          )
+          updatedGroupsList.map((g) => ({
+            ...g,
+            expanded: g.id === selectedGroupForEdit.id ? true : (groups.find(og => og.id === g.id)?.expanded || false),
+          }))
         );
 
         toast({

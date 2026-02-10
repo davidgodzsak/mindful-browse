@@ -31,6 +31,11 @@ const PluginPopup = () => {
   const [selectedTimeLimit, setSelectedTimeLimit] = useState<number | null>(null);
   const [selectedOpensLimit, setSelectedOpensLimit] = useState<number | null>(null);
 
+  // Group selection state
+  const [showGroupSelector, setShowGroupSelector] = useState(false);
+  const [availableGroups, setAvailableGroups] = useState<any[]>([]);
+  const [isLoadingGroups, setIsLoadingGroups] = useState(false);
+
   // Load current page info on mount
   useEffect(() => {
     const loadPageInfo = async () => {
@@ -151,11 +156,12 @@ const PluginPopup = () => {
 
     try {
       setIsSaving(true);
-      if (selectedTimeLimit) {
-        await api.addQuickLimit(siteName, selectedTimeLimit * 60);
-      }
-      // Opens limits would need a separate API endpoint
-      // For now, opens limits are only available in settings
+      // Add site with both time and opens limits
+      await api.addSite({
+        name: siteName,
+        timeLimit: selectedTimeLimit,
+        opensLimit: selectedOpensLimit,
+      });
 
       toast({
         title: "Success",
@@ -175,6 +181,8 @@ const PluginPopup = () => {
         const usedMinutes = Math.ceil((pageInfo.siteInfo.todaySeconds || 0) / 60);
         setTimeLimit(limitMinutes);
         setTimeUsed(usedMinutes);
+        setOpensLimit(pageInfo.siteInfo.dailyOpenLimit || 0);
+        setOpensUsed(pageInfo.siteInfo.todayOpenCount || 0);
       }
     } catch (error) {
       console.error("Error adding limit:", error);
@@ -195,6 +203,77 @@ const PluginPopup = () => {
         url: browser.runtime.getURL("ui/settings/settings.html"),
       });
     });
+  };
+
+  const openGroupSelector = async () => {
+    try {
+      setIsLoadingGroups(true);
+      const groups = await api.getGroups();
+      setAvailableGroups(groups);
+      setShowGroupSelector(true);
+    } catch (error) {
+      console.error("Error loading groups:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load groups. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingGroups(false);
+    }
+  };
+
+  const handleAddToGroup = async (groupId: string) => {
+    try {
+      setIsSaving(true);
+      let siteToadd = siteId;
+
+      // If site doesn't exist yet (not limited), create it first
+      if (!siteId) {
+        const newSite = await api.addSite({
+          name: siteName,
+          // Don't set any limits, just add the site
+        });
+        siteToadd = newSite.id;
+      }
+
+      // Add site to group
+      await api.addSiteToGroup(groupId, siteToadd);
+
+      toast({
+        title: "Success",
+        description: `Site added to group successfully`,
+      });
+
+      // Refresh page info
+      const pageInfo = await api.getCurrentPageInfo();
+      if (pageInfo.isDistractingSite && pageInfo.siteInfo) {
+        setIsLimited(true);
+        setGroupName(pageInfo.siteInfo.groupId ? "Group" : null);
+        setGroupId(pageInfo.siteInfo.groupId || null);
+        setSiteId(pageInfo.siteInfo.id);
+        const limitSeconds = pageInfo.siteInfo.dailyLimitSeconds || 0;
+        const limitMinutes = limitSeconds > 0 ? Math.ceil(limitSeconds / 60) : 0;
+        const usedMinutes = Math.ceil((pageInfo.siteInfo.todaySeconds || 0) / 60);
+        setTimeLimit(limitMinutes);
+        setTimeUsed(usedMinutes);
+        setOpensLimit(pageInfo.siteInfo.dailyOpenLimit || 0);
+        setOpensUsed(pageInfo.siteInfo.todayOpenCount || 0);
+      }
+
+      setShowGroupSelector(false);
+      setSelectedTimeLimit(null);
+      setSelectedOpensLimit(null);
+    } catch (error) {
+      console.error("Error adding site to group:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add site to group. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const timeRemaining = Math.max(0, timeLimit - timeUsed);
@@ -324,16 +403,58 @@ const PluginPopup = () => {
             </div>
 
             {/* Add to group button */}
-            <Button
-              variant="outline"
-              className="w-full rounded-xl"
-              size="sm"
-              onClick={handleOpenSettings}
-              disabled={isSaving}
-            >
-              <Plus size={14} className="mr-1.5" />
-              Add to group
-            </Button>
+            {showGroupSelector ? (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Select a group
+                </p>
+                {isLoadingGroups ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  </div>
+                ) : availableGroups.length > 0 ? (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {availableGroups.map((group) => (
+                      <Button
+                        key={group.id}
+                        variant="outline"
+                        className="w-full rounded-xl justify-start"
+                        size="sm"
+                        onClick={() => handleAddToGroup(group.id)}
+                        disabled={isSaving}
+                      >
+                        <div className={`w-2 h-2 rounded-full ${group.color} mr-2`} />
+                        {group.name}
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No groups available. Create one in settings.
+                  </p>
+                )}
+                <Button
+                  variant="ghost"
+                  className="w-full rounded-xl text-xs"
+                  size="sm"
+                  onClick={() => setShowGroupSelector(false)}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full rounded-xl"
+                size="sm"
+                onClick={openGroupSelector}
+                disabled={isSaving}
+              >
+                <Plus size={14} className="mr-1.5" />
+                Add to group
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

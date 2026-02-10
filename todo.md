@@ -29,11 +29,12 @@
 - [x] Add to group should show a selector where the options are the available groups. When selecting an option it should add the page to the group and have the popup to refresh to show the limit
 - [x] When we select an open and a time limit for a page in the popup quick add -> it should store both of the limits. Currently it only stores the limit for the time.
 - [x] When I click add to group for a non-limited site and click on a specific group's button nothing happens. It does not add the site to the group. It should add it and refresh the popup to show the correct state of the group.
+- [ ] When I click on the add to group button, then the groups appear as buttons that makes the popup be bigger than the allocated size and it introduces vertical and horizontal scrollbars. This is a bad experience so let's make sure the popup window can grow horizontally so the content fits inside.
 
 ## Improvements
 
 ### General
-- [ ] Popup on the timeout page and settings should show something different, not the regular "not tracked"
+- [x] Popup on the timeout page and settings should show something different, not the regular "not tracked"
 - [ ] Be able to extend current limit for a day, but needs an explanation of at least 35 characters this is somewhere not obvious on the timout page and the popup.
 - [ ] Clean clutter: Simplify code, create a "mental map" and check what can be reused across pages, Delete dead code, delete unnecessary logging and error handling, delete mock data, delete unnecessary components
 - [ ] Make sofisticated tests
@@ -42,10 +43,10 @@
 - [ ] Be able to limit just a subdomain or a subpage (e.g. shorts.youtube.com or reddit.com/r/hungary)
 
 ### Settings page
-- [ ] be able to turn limits on or off by having a "switch" button next to each page in the limits tab (even on pages individually that are in a group) (reuse the one in the settings -> messages tab -> display options)
+- [x] be able to turn limits on or off by having a "switch" button next to each page in the limits tab (even on pages individually that are in a group) (reuse the one in the settings -> messages tab -> display options)
 
 ### Timeout page
-- [ ] when opening the timeout page randomize the order of the displayed messages (don't shuffle them in the storage) so we always see a different order when opening it, not always the same.
+- [x] when opening the timeout page randomize the order of the displayed messages (don't shuffle them in the storage) so we always see a different order when opening it, not always the same.
 
 ### Statistic pages
 - [ ] Track how much time we spend on each site and how many times we open each site

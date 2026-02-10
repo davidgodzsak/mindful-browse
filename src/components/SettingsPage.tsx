@@ -34,6 +34,7 @@ interface Site {
   favicon: string;
   timeLimit?: number;
   opensLimit?: number;
+  isEnabled?: boolean;
 }
 
 interface Group {
@@ -44,6 +45,7 @@ interface Group {
   opensLimit: number;
   sites: Site[];
   expanded?: boolean;
+  isEnabled?: boolean;
 }
 
 const getFaviconEmoji = (siteName: string): string => {
@@ -168,7 +170,9 @@ const SettingsPage = () => {
     siteUpdated: (data) => {
       if (!data.site.groupId) {
         setIndividualSites((prev) =>
-          prev.map((s) => (s.id === data.site.id ? data.site : s))
+          prev.map((s) =>
+            s.id === data.site.id ? { ...s, ...data.site } : s
+          )
         );
       } else {
         // If site now has a groupId, remove it from individual sites
@@ -196,7 +200,9 @@ const SettingsPage = () => {
     },
     groupUpdated: (data) => {
       setGroups((prev) =>
-        prev.map((g) => (g.id === data.group.id ? data.group : g))
+        prev.map((g) =>
+          g.id === data.group.id ? { ...g, ...data.group } : g
+        )
       );
     },
     groupDeleted: (data) => {
@@ -389,6 +395,78 @@ const SettingsPage = () => {
       });
       // Revert on error
       setShowActivitySuggestions(!checked);
+    }
+  };
+
+  const handleToggleSiteEnabled = async (siteId: string, currentValue: boolean) => {
+    try {
+      setIsSaving(true);
+
+      // Update via API first
+      const newEnabled = !currentValue;
+      await api.updateSite(siteId, { isEnabled: newEnabled });
+
+      // Then update UI with correct state
+      setIndividualSites((prevSites) =>
+        prevSites.map((site) =>
+          site.id === siteId ? { ...site, isEnabled: newEnabled } : site
+        )
+      );
+
+      // Also update sites within groups
+      setGroups((prevGroups) =>
+        prevGroups.map((group) => ({
+          ...group,
+          sites: (group.sites || []).map((site) =>
+            site.id === siteId ? { ...site, isEnabled: newEnabled } : site
+          ),
+        }))
+      );
+
+      toast({
+        title: "Success",
+        description: newEnabled ? "Site enabled" : "Site disabled",
+      });
+    } catch (error) {
+      console.error("Error toggling site:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update site",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleToggleGroupEnabled = async (groupId: string, currentValue: boolean) => {
+    try {
+      setIsSaving(true);
+
+      // Update via API first
+      const newEnabled = !currentValue;
+      await api.updateGroup(groupId, { isEnabled: newEnabled });
+
+      // Then update UI - just toggle the flag, preserve sites
+      setGroups((prevGroups) =>
+        prevGroups.map((group) =>
+          group.id === groupId ? { ...group, isEnabled: newEnabled } : group
+        )
+      );
+
+      toast({
+        title: "Success",
+        description: newEnabled ? "Group enabled" : "Group disabled",
+      });
+    } catch (error) {
+      console.error("Error toggling group:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update group",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -729,6 +807,12 @@ const SettingsPage = () => {
                         {site.opensLimit} opens
                       </Badge>
                     )}
+                    <Switch
+                      checked={site.isEnabled !== false}
+                      onCheckedChange={() => handleToggleSiteEnabled(site.id, site.isEnabled !== false)}
+                      disabled={isSaving}
+                      title={site.isEnabled !== false ? "Enabled" : "Disabled"}
+                    />
                     <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
                       <Button
                         variant="ghost"
@@ -771,37 +855,45 @@ const SettingsPage = () => {
                     key={group.id}
                     className="rounded-2xl border bg-card overflow-hidden"
                   >
-                    <button
-                      onClick={() => toggleGroup(group.id)}
-                      className="w-full flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors"
-                    >
-                      <div
-                        className={`w-3 h-3 rounded-full ${group.color}`}
+                    <div className="flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors">
+                      <button
+                        onClick={() => toggleGroup(group.id)}
+                        className="flex-1 flex items-center gap-3"
+                      >
+                        <div
+                          className={`w-3 h-3 rounded-full ${group.color}`}
+                        />
+                        <span className="font-semibold text-left">
+                          {group.name}
+                        </span>
+                        {group.timeLimit > 0 && (
+                          <Badge variant="outline" className="rounded-full gap-1">
+                            <Clock size={12} />
+                            {group.timeLimit} min
+                          </Badge>
+                        )}
+                        {group.opensLimit > 0 && (
+                          <Badge variant="outline" className="rounded-full gap-1">
+                            <MousePointerClick size={12} />
+                            {group.opensLimit}
+                          </Badge>
+                        )}
+                        <Badge variant="secondary" className="rounded-full">
+                          {(group.sites || []).length} sites
+                        </Badge>
+                        {group.expanded ? (
+                          <ChevronDown size={18} />
+                        ) : (
+                          <ChevronRight size={18} />
+                        )}
+                      </button>
+                      <Switch
+                        checked={group.isEnabled !== false}
+                        onCheckedChange={() => handleToggleGroupEnabled(group.id, group.isEnabled !== false)}
+                        disabled={isSaving}
+                        title={group.isEnabled !== false ? "Enabled" : "Disabled"}
                       />
-                      <span className="font-semibold flex-1 text-left">
-                        {group.name}
-                      </span>
-                      {group.timeLimit > 0 && (
-                        <Badge variant="outline" className="rounded-full gap-1">
-                          <Clock size={12} />
-                          {group.timeLimit} min
-                        </Badge>
-                      )}
-                      {group.opensLimit > 0 && (
-                        <Badge variant="outline" className="rounded-full gap-1">
-                          <MousePointerClick size={12} />
-                          {group.opensLimit}
-                        </Badge>
-                      )}
-                      <Badge variant="secondary" className="rounded-full">
-                        {(group.sites || []).length} sites
-                      </Badge>
-                      {group.expanded ? (
-                        <ChevronDown size={18} />
-                      ) : (
-                        <ChevronRight size={18} />
-                      )}
-                    </button>
+                    </div>
                     {group.expanded && (
                       <div className="border-t bg-muted/30 p-3 space-y-2">
                         {(group.sites || []).map((site) => (
@@ -811,6 +903,12 @@ const SettingsPage = () => {
                           >
                             <span className="text-lg">{site.favicon}</span>
                             <span className="flex-1 text-sm">{site.name}</span>
+                            <Switch
+                              checked={site.isEnabled !== false}
+                              onCheckedChange={() => handleToggleSiteEnabled(site.id, site.isEnabled !== false)}
+                              disabled={isSaving}
+                              title={site.isEnabled !== false ? "Enabled" : "Disabled"}
+                            />
                             <Button
                               variant="ghost"
                               size="icon"

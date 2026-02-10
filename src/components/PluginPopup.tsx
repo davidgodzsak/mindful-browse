@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Plus, Clock, MousePointerClick, Pause, Play, Globe, Loader2 } from "lucide-react";
+import { Settings, Plus, Clock, MousePointerClick, Pause, Play, Globe, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -18,6 +18,8 @@ const PluginPopup = () => {
   // Current page data
   const [currentUrl, setCurrentUrl] = useState<string>("");
   const [isLimited, setIsLimited] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [disabledReason, setDisabledReason] = useState<'site' | 'group' | 'both' | null>(null);
   const [siteName, setSiteName] = useState<string>("");
   const [groupName, setGroupName] = useState<string | null>(null);
   const [siteId, setSiteId] = useState<string | null>(null);
@@ -26,6 +28,7 @@ const PluginPopup = () => {
   const [timeLimit, setTimeLimit] = useState(0);
   const [opensUsed, setOpensUsed] = useState(0);
   const [opensLimit, setOpensLimit] = useState(0);
+  const [pageType, setPageType] = useState<'normal' | 'timeout' | 'settings'>('normal');
 
   // Preset selection state
   const [selectedTimeLimit, setSelectedTimeLimit] = useState<number | null>(null);
@@ -43,35 +46,78 @@ const PluginPopup = () => {
         setIsLoading(true);
         const pageInfo = await api.getCurrentPageInfo();
 
-        // Extract hostname from URL
+        // Extract hostname from URL and detect extension pages
         try {
           const url = new URL(pageInfo.url);
           setCurrentUrl(pageInfo.url);
+
+          // Detect extension pages
+          if (pageInfo.url.includes('timeout.html') || pageInfo.url.includes('timeout/index.html')) {
+            setSiteName('Timeout Page');
+            setPageType('timeout');
+            setIsLimited(false);
+            return;
+          }
+          if (pageInfo.url.includes('settings.html') || pageInfo.url.includes('settings/index.html')) {
+            setSiteName('Settings Page');
+            setPageType('settings');
+            setIsLimited(false);
+            return;
+          }
+
           setSiteName(url.hostname);
+          setPageType('normal');
         } catch {
           setCurrentUrl(pageInfo.url);
           setSiteName(pageInfo.hostname || "unknown");
+          setPageType('normal');
         }
 
         if (pageInfo.isDistractingSite && pageInfo.siteInfo) {
-          setIsLimited(true);
-          setGroupName(pageInfo.siteInfo.groupId ? "Group" : null);
+          // Check if site/group is disabled
+          const siteIsEnabled = pageInfo.siteInfo.isEnabled !== false;
+          const groupIsEnabled = pageInfo.siteInfo.groupInfo ? pageInfo.siteInfo.groupInfo.isEnabled : true;
+
+          const siteDisabled = !siteIsEnabled;
+          const groupDisabled = !groupIsEnabled;
+
           setSiteId(pageInfo.siteInfo.id);
           setGroupId(pageInfo.siteInfo.groupId || null);
+          setGroupName(pageInfo.siteInfo.groupId ? pageInfo.siteInfo.groupInfo?.name : null);
 
-          // Convert seconds to minutes (handle undefined)
-          const limitSeconds = pageInfo.siteInfo.dailyLimitSeconds || 0;
-          const limitMinutes = limitSeconds > 0 ? Math.ceil(limitSeconds / 60) : 0;
-          const usedMinutes = Math.ceil(
-            (pageInfo.siteInfo.todaySeconds || 0) / 60
-          );
+          // Determine disabled reason
+          if (siteDisabled || groupDisabled) {
+            setIsDisabled(true);
+            if (siteDisabled && groupDisabled) {
+              setDisabledReason('both');
+            } else if (groupDisabled) {
+              setDisabledReason('group');
+            } else {
+              setDisabledReason('site');
+            }
+            setIsLimited(false);
+          } else {
+            // Both enabled - show tracking info
+            setIsDisabled(false);
+            setDisabledReason(null);
+            setIsLimited(true);
 
-          setTimeLimit(limitMinutes);
-          setTimeUsed(usedMinutes);
-          setOpensLimit(pageInfo.siteInfo.dailyOpenLimit || 0);
-          setOpensUsed(pageInfo.siteInfo.todayOpenCount || 0);
+            // Convert seconds to minutes (handle undefined)
+            const limitSeconds = pageInfo.siteInfo.dailyLimitSeconds || 0;
+            const limitMinutes = limitSeconds > 0 ? Math.ceil(limitSeconds / 60) : 0;
+            const usedMinutes = Math.ceil(
+              (pageInfo.siteInfo.todaySeconds || 0) / 60
+            );
+
+            setTimeLimit(limitMinutes);
+            setTimeUsed(usedMinutes);
+            setOpensLimit(pageInfo.siteInfo.dailyOpenLimit || 0);
+            setOpensUsed(pageInfo.siteInfo.todayOpenCount || 0);
+          }
         } else {
           setIsLimited(false);
+          setIsDisabled(false);
+          setDisabledReason(null);
         }
       } catch (error) {
         console.error("Error loading page info:", error);
@@ -205,6 +251,58 @@ const PluginPopup = () => {
     });
   };
 
+  const handleTurnOnSite = async () => {
+    if (!siteId) return;
+    try {
+      setIsSaving(true);
+
+      // Enable site if it's disabled
+      if (disabledReason === 'site' || disabledReason === 'both') {
+        await api.updateSite(siteId, { isEnabled: true });
+      }
+
+      // Enable group if it's disabled
+      if ((disabledReason === 'group' || disabledReason === 'both') && groupId) {
+        await api.updateGroup(groupId, { isEnabled: true });
+      }
+
+      setIsDisabled(false);
+      setDisabledReason(null);
+      setIsLimited(true);
+
+      toast({
+        title: "Success",
+        description: "Tracking enabled",
+      });
+
+      // Refresh page info to show tracking details
+      const pageInfo = await api.getCurrentPageInfo();
+      if (pageInfo.isDistractingSite && pageInfo.siteInfo) {
+        const siteEnabled = pageInfo.siteInfo.isEnabled !== false;
+        const groupEnabled = pageInfo.siteInfo.groupInfo ? pageInfo.siteInfo.groupInfo.isEnabled : true;
+
+        if (siteEnabled && groupEnabled) {
+          const limitSeconds = pageInfo.siteInfo.dailyLimitSeconds || 0;
+          const limitMinutes = limitSeconds > 0 ? Math.ceil(limitSeconds / 60) : 0;
+          const usedMinutes = Math.ceil((pageInfo.siteInfo.todaySeconds || 0) / 60);
+          setTimeLimit(limitMinutes);
+          setTimeUsed(usedMinutes);
+          setOpensLimit(pageInfo.siteInfo.dailyOpenLimit || 0);
+          setOpensUsed(pageInfo.siteInfo.todayOpenCount || 0);
+        }
+      }
+    } catch (error) {
+      console.error("Error enabling tracking:", error);
+      toast({
+        title: "Error",
+        description: "Failed to enable tracking",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const openGroupSelector = async () => {
     try {
       setIsLoadingGroups(true);
@@ -300,7 +398,135 @@ const PluginPopup = () => {
     );
   }
 
+  // Show UI for disabled sites/groups (turn-on option)
+  if (isDisabled && siteId) {
+    const getMessage = () => {
+      if (disabledReason === 'both') {
+        return `Tracking is paused for this site and its group. Click below to turn it back on.`;
+      } else if (disabledReason === 'group') {
+        return `Tracking is paused for the group this site belongs to. Click below to enable it.`;
+      } else {
+        return `Tracking is paused for this site. Click below to turn it back on.`;
+      }
+    };
+
+    const getLabel = () => {
+      if (disabledReason === 'group') {
+        return `${groupName} (disabled)`;
+      } else if (disabledReason === 'both') {
+        return `${siteName} (disabled)`;
+      } else {
+        return 'Disabled';
+      }
+    };
+
+    return (
+      <Card className="w-80 shadow-soft border-0 overflow-hidden">
+        <div className="gradient-mint p-4">
+          <div className="flex items-center justify-between">
+            <Logo size="sm" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleOpenSettings}
+              className="hover:bg-white/50"
+            >
+              <Settings size={18} />
+            </Button>
+          </div>
+        </div>
+
+        <CardContent className="p-5">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center">
+              <Pause size={20} className="text-yellow-600" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground">{siteName}</p>
+              <p className="text-sm text-muted-foreground">{getLabel()}</p>
+            </div>
+          </div>
+
+          <p className="text-sm text-muted-foreground mb-5">
+            {getMessage()}
+          </p>
+
+          <Button
+            className="w-full rounded-xl"
+            onClick={handleTurnOnSite}
+            disabled={isSaving}
+          >
+            <Play size={16} className="mr-2" />
+            Turn on tracking
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!isLimited) {
+    if (pageType === 'timeout') {
+      return (
+        <Card className="w-80 shadow-soft border-0 overflow-hidden">
+          <div className="gradient-mint p-4">
+            <div className="flex items-center justify-between">
+              <Logo size="sm" />
+              <Button variant="ghost" size="icon" onClick={handleOpenSettings}>
+                <Settings size={18} />
+              </Button>
+            </div>
+          </div>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+                <AlertCircle size={20} className="text-red-600" />
+              </div>
+              <div>
+                <p className="font-medium">Timeout Page</p>
+                <p className="text-sm text-muted-foreground">Limit reached</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mb-5">
+              You've reached a limit. Take a break and come back later.
+            </p>
+            <Button variant="outline" className="w-full rounded-xl" onClick={handleOpenSettings}>
+              <Settings size={16} className="mr-2" />
+              Manage limits
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (pageType === 'settings') {
+      return (
+        <Card className="w-80 shadow-soft border-0 overflow-hidden">
+          <div className="gradient-mint p-4">
+            <div className="flex items-center justify-between">
+              <Logo size="sm" />
+              <Button variant="ghost" size="icon" onClick={handleOpenSettings}>
+                <Settings size={18} />
+              </Button>
+            </div>
+          </div>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                <Settings size={20} className="text-blue-600" />
+              </div>
+              <div>
+                <p className="font-medium">Settings Page</p>
+                <p className="text-sm text-muted-foreground">Manage limits</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Configure your limits, groups, and messages here.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
+
     return (
       <Card className="w-80 shadow-soft border-0 overflow-hidden">
         <div className="gradient-mint p-4">

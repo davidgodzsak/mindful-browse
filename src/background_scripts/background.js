@@ -30,6 +30,7 @@ import {
 } from './usage_recorder.js';
 import {
   checkIfUrlIsDistracting,
+  checkIfUrlHasLimits,
   initializeDistractionDetector,
   loadDistractingSitesFromStorage,
 } from './distraction_detector.js';
@@ -914,9 +915,19 @@ async function handleMessage(message, _sender, _sendResponse) {
             };
           }
 
-          // Check if URL is a distracting site
-          const distractionCheck = checkIfUrlIsDistracting(activeTab.url);
-          const { isMatch, siteId } = distractionCheck;
+          // Check if URL is a distracting site (enabled or disabled)
+          // First check for enabled sites
+          let distractionCheck = checkIfUrlIsDistracting(activeTab.url);
+          let { isMatch, siteId } = distractionCheck;
+          let isDisabled = false;
+
+          // If not enabled, check for disabled sites
+          if (!isMatch || !siteId) {
+            distractionCheck = checkIfUrlHasLimits(activeTab.url);
+            isMatch = distractionCheck.isMatch;
+            siteId = distractionCheck.siteId;
+            isDisabled = isMatch && !distractionCheck.isEnabled;
+          }
 
           if (!isMatch || !siteId) {
             return {
@@ -998,6 +1009,19 @@ async function handleMessage(message, _sender, _sendResponse) {
             };
           }
 
+          // Get group info if site is in a group
+          let groupInfo = null;
+          if (site.groupId) {
+            const group = groups.find((g) => g.id === site.groupId);
+            if (group) {
+              groupInfo = {
+                id: group.id,
+                name: group.name,
+                isEnabled: group.isEnabled !== false,
+              };
+            }
+          }
+
           // Enhanced site info with real usage data
           const enhancedSiteInfo = {
             ...site,
@@ -1006,6 +1030,7 @@ async function handleMessage(message, _sender, _sendResponse) {
             todaySeconds: siteUsage.timeSpentSeconds,
             todayOpenCount: siteUsage.opens,
             lastUpdated: Date.now(),
+            groupInfo,
           };
 
           return {

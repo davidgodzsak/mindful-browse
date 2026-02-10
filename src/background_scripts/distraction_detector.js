@@ -150,3 +150,39 @@ export function checkIfUrlIsDistracting(url) {
   }
   return { isMatch: false, siteId: null, groupId: null, matchingPattern: null };
 }
+
+/**
+ * Checks if a URL has ANY limits (enabled or disabled).
+ * Used by the popup to show "turn on" for disabled sites instead of "add new".
+ * @param {string} url - The URL to check.
+ * @returns {object} { isMatch: boolean, siteId: string|null, groupId: string|null, matchingPattern: string|null, isEnabled: boolean|null }
+ */
+export function checkIfUrlHasLimits(url) {
+  if (!_isInitialized) {
+    console.warn(
+      '[DistractionDetector] Detector not initialized. Call initializeDistractionDetector first.'
+    );
+    return { isMatch: false, siteId: null, groupId: null, matchingPattern: null, isEnabled: null };
+  }
+  const currentHostname = _getHostnameFromUrl(url);
+  if (!currentHostname) {
+    return { isMatch: false, siteId: null, groupId: null, matchingPattern: null, isEnabled: null };
+  }
+
+  for (const site of _distractingSitesCache) {
+    // Ensure site.urlPattern exists and is a string before attempting to match
+    if (site.urlPattern && typeof site.urlPattern === 'string') {
+      // Check if hostname matches (regardless of enabled status)
+      if (currentHostname.includes(site.urlPattern)) {
+        return {
+          isMatch: true,
+          siteId: site.id,
+          groupId: site.groupId || null,
+          matchingPattern: site.urlPattern,
+          isEnabled: site.isEnabled !== false,
+        };
+      }
+    }
+  }
+  return { isMatch: false, siteId: null, groupId: null, matchingPattern: null, isEnabled: null };
+}

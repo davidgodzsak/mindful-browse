@@ -141,12 +141,23 @@ const TimeoutPage = () => {
       if (messages && messages.length > 0) {
         const texts = messages.map((m) => m.text || m);
         setQuotes(texts);
-        setCurrentQuote(0);
+        const randomIndex = Math.floor(Math.random() * texts.length);
+        console.log('Randomized timeout message:', randomIndex, 'of', texts.length);
+        setCurrentQuote(randomIndex);
+      } else {
+        // Use default quotes if no messages
+        setQuotes(defaultQuotes);
+        const randomIndex = Math.floor(Math.random() * defaultQuotes.length);
+        console.log('Randomized default message:', randomIndex, 'of', defaultQuotes.length);
+        setCurrentQuote(randomIndex);
       }
     } catch (error) {
       console.error("Error loading quotes:", error);
       // Use default quotes on error
       setQuotes(defaultQuotes);
+      const randomIndex = Math.floor(Math.random() * defaultQuotes.length);
+      console.log('Randomized default message (error fallback):', randomIndex, 'of', defaultQuotes.length);
+      setCurrentQuote(randomIndex);
     } finally {
       setIsLoadingQuote(false);
     }

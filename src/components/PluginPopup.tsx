@@ -489,10 +489,6 @@ const PluginPopup = () => {
             <p className="text-sm text-muted-foreground mb-5">
               You've reached a limit. Take a break and come back later.
             </p>
-            <Button variant="outline" className="w-full rounded-xl" onClick={handleOpenSettings}>
-              <Settings size={16} className="mr-2" />
-              Manage limits
-            </Button>
           </CardContent>
         </Card>
       );
@@ -755,16 +751,6 @@ const PluginPopup = () => {
           </div>
         )}
 
-        {/* Settings button */}
-        <Button
-          variant="outline"
-          className="w-full rounded-xl"
-          onClick={handleOpenSettings}
-          disabled={isSaving}
-        >
-          <Settings size={16} className="mr-2" />
-          Open settings
-        </Button>
       </CardContent>
     </Card>
   );

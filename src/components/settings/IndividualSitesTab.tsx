@@ -182,7 +182,7 @@ export function IndividualSitesTab({
                         {group.timeLimit} min
                       </Badge>
                     )}
-                    {group.opensLimit > 0 && (
+                    {group.opensLimit && group.opensLimit > 0 && (
                       <Badge variant="outline" className="rounded-full gap-1">
                         <MousePointerClick size={12} />
                         {group.opensLimit}

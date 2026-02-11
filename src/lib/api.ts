@@ -129,8 +129,8 @@ export async function getGroups(): Promise<UIGroup[]> {
     sendMessage('getAllSettings').then((r) => r.distractingSites || []),
   ]);
 
-  const sitesMap = new Map(backendSites.map((s: any) => [s.id, s]));
-  return backendGroups.map((group: any) => groupFromStorage(group, sitesMap));
+  const sitesMap = new Map<string, any>(backendSites.map((s: any) => [s.id, s]));
+  return backendGroups.map((group: any) => groupFromStorage(group, sitesMap as Map<string, any>));
 }
 
 export async function addGroup(uiGroup: Partial<UIGroup>): Promise<UIGroup> {
@@ -179,9 +179,9 @@ export async function updateGroup(
   const backendSites = await sendMessage('getAllSettings').then(
     (r) => r.distractingSites || []
   );
-  const sitesMap = new Map(backendSites.map((s: any) => [s.id, s]));
+  const sitesMap = new Map<string, any>(backendSites.map((s: any) => [s.id, s]));
 
-  return groupFromStorage(result, sitesMap);
+  return groupFromStorage(result, sitesMap as Map<string, any>);
 }
 
 export async function deleteGroup(id: string): Promise<boolean> {
@@ -197,8 +197,8 @@ export async function addSiteToGroup(
   const backendSites = await sendMessage('getAllSettings').then(
     (r) => r.distractingSites || []
   );
-  const sitesMap = new Map(backendSites.map((s: any) => [s.id, s]));
-  return groupFromStorage(result, sitesMap);
+  const sitesMap = new Map<string, any>(backendSites.map((s: any) => [s.id, s]));
+  return groupFromStorage(result, sitesMap as Map<string, any>);
 }
 
 export async function removeSiteFromGroup(
@@ -209,8 +209,8 @@ export async function removeSiteFromGroup(
   const backendSites = await sendMessage('getAllSettings').then(
     (r) => r.distractingSites || []
   );
-  const sitesMap = new Map(backendSites.map((s: any) => [s.id, s]));
-  return groupFromStorage(result, sitesMap);
+  const sitesMap = new Map<string, any>(backendSites.map((s: any) => [s.id, s]));
+  return groupFromStorage(result, sitesMap as Map<string, any>);
 }
 
 export async function getCurrentPageInfo(): Promise<any> {

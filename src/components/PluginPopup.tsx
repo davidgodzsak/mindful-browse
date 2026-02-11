@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import * as api from "@/lib/api";
+import { UIGroup } from "@/lib/storage";
 import { useBroadcastUpdates } from "@/hooks/useBroadcastUpdates";
 import { useToggleSelection } from "@/lib/hooks/useToggleSelection";
 import { getErrorMessage, logError, getErrorToastProps, getSuccessToastProps } from "@/lib/utils/errorHandler";
@@ -38,7 +39,7 @@ const PluginPopup = () => {
 
   // Group selection state
   const [showGroupSelector, setShowGroupSelector] = useState(false);
-  const [availableGroups, setAvailableGroups] = useState<Array<any>>([]);
+  const [availableGroups, setAvailableGroups] = useState<UIGroup[]>([]);
   const [isLoadingGroups, setIsLoadingGroups] = useState(false);
 
   // Timeout page state (needed for passing to view component)
@@ -236,8 +237,8 @@ const PluginPopup = () => {
       // Add site with both time and opens limits
       await api.addSite({
         name: siteName,
-        timeLimit: selectedTimeLimit,
-        opensLimit: selectedOpensLimit,
+        timeLimit: selectedTimeLimit ?? undefined,
+        opensLimit: selectedOpensLimit ?? undefined,
       });
 
       toast(getSuccessToastProps(`Limit added for ${siteName}`));
@@ -340,19 +341,15 @@ const PluginPopup = () => {
   const handleAddToGroup = async (groupId: string) => {
     try {
       setIsSaving(true);
-      let siteToadd = siteId;
 
-      // If site doesn't exist yet (not limited), create it first
-      if (!siteId) {
-        const newSite = await api.addSite({
-          name: siteName,
-          // Don't set any limits, just add the site
-        });
-        siteToadd = newSite.id;
-      }
+      // Determine which site to add to group
+      const siteToAddId = siteId || (await api.addSite({
+        name: siteName,
+        // Don't set any limits, just add the site
+      })).id;
 
       // Add site to group
-      await api.addSiteToGroup(groupId, siteToadd);
+      await api.addSiteToGroup(groupId, siteToAddId);
 
       toast(getSuccessToastProps("Site added to group successfully"));
 
@@ -396,7 +393,7 @@ const PluginPopup = () => {
       // Navigate back to original site if we have the URL
       if (blockedUrl) {
         setTimeout(() => {
-          browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+          browser.tabs.query({ active: true, currentWindow: true }).then((tabs: any[]) => {
             if (tabs[0]) {
               browser.tabs.update(tabs[0].id, { url: decodeURIComponent(blockedUrl) });
             }

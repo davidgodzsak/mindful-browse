@@ -15,7 +15,7 @@ import {
 interface CreateGroupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreate: (group: { name: string; color: string; timeLimit: number; opensLimit: number }) => void;
+  onCreate: (group: { name: string; color: string; timeLimit: number; opensLimit?: number }) => void;
   initialGroup?: { id: string; name: string; color: string; timeLimit: number; opensLimit?: number };
   isEditing?: boolean;
 }
@@ -67,10 +67,13 @@ const CreateGroupDialog = ({ open, onOpenChange, onCreate, initialGroup, isEditi
       return;
     }
 
+    // For new groups, default timeLimit to 30 if not provided
+    const finalTimeLimit = parsedTimeLimit || (isEditing ? undefined : 30);
+
     onCreate({
       name: groupName.trim(),
       color: selectedColor,
-      timeLimit: parsedTimeLimit || (isEditing ? undefined : 30), // Only apply default when creating new
+      timeLimit: finalTimeLimit || 30, // Ensure always a number for new groups
       opensLimit: parsedOpensLimit, // Can be undefined
     });
     setGroupName("");

@@ -41,10 +41,8 @@
 ### General
 - [x] Popup on the timeout page and settings should show something different, not the regular "not tracked"
 - [x] Be able to extend current limit for a day, but needs an explanation of at least 35 characters this is somewhere not obvious on the timout page and the popup.
-- [ ] Clean clutter: Simplify code, create a "mental map document" and check what can be reused across pages, Delete dead code, delete unnecessary logging and error handling, delete mock data
-- [ ] Make sofisticated tests
+- [x] Clean clutter: Simplify code, create a "mental map document" and check what can be reused across pages, Delete dead code, delete unnecessary logging and error handling, delete mock data
 - [ ] Refactor to actually use locales, remove eery hardcoded string in favor of this. 
-- [ ] Do we need all 3 TS config files, postcss.config.js, eslint.config.js, components.json, bun.lockb?
 - [ ] Be able to limit just a subdomain or a subpage (e.g. shorts.youtube.com or reddit.com/r/hungary)
 
 ### Settings page

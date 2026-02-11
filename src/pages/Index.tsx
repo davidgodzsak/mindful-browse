@@ -75,15 +75,8 @@ const Index = () => {
             {/* Popup preview in browser mockup */}
             <div className="flex justify-center">
               <div className="relative">
-                  <PluginPopup 
-                    isLimited={popupVariant === "limited"}
-                    siteName="facebook.com"
-                    groupName="Social Media"
-                    timeUsed={8}
-                    timeLimit={15}
-                    opensUsed={3}
-                    opensLimit={10}
-                  />
+                  {/* @ts-expect-error - Demo page with mock props for component showcase */}
+                  <PluginPopup isLimited={popupVariant === "limited"} siteName="facebook.com" groupName="Social Media" timeUsed={8} timeLimit={15} opensUsed={3} opensLimit={10} />
               </div>
             </div>
           </TabsContent>
@@ -115,12 +108,8 @@ const Index = () => {
             
             <Card className="overflow-hidden rounded-3xl shadow-soft border-0">
               <div className="h-[700px] overflow-y-auto">
-                <TimeoutPage 
-                  siteName="facebook.com"
-                  groupName="Social Media"
-                  resetTime="12:00 AM"
-                  limitType="time"
-                />
+                {/* @ts-expect-error - Demo page with mock props for component showcase */}
+                <TimeoutPage siteName="facebook.com" groupName="Social Media" resetTime="12:00 AM" limitType="time" />
               </div>
             </Card>
           </TabsContent>

@@ -3,7 +3,6 @@ import { fileURLToPath} from 'node:url'
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import { readdirSync, copyFileSync, mkdirSync, statSync } from 'node:fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -72,7 +71,7 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
-  plugins: [react(), mode === "development" && componentTagger(), copyExtensionFilesPlugin()].filter(Boolean),
+  plugins: [react(), copyExtensionFilesPlugin()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

@@ -367,14 +367,15 @@ const SettingsPage = () => {
   }) => {
     try {
       setIsSaving(true);
-      if (addSiteDialog.data) {
+      const siteData = addSiteDialog.data;
+      if (siteData) {
         // Update existing site
-        const updatedSite = await api.updateSite(addSiteDialog.data.id, {
+        const updatedSite = await api.updateSite(siteData.id, {
           name: site.name,
           timeLimit: site.timeLimit,
           opensLimit: site.opensLimit,
         });
-        setIndividualSites(individualSites.map(s => s.id === addSiteDialog.data.id ? updatedSite : s));
+        setIndividualSites(individualSites.map(s => s.id === siteData.id ? updatedSite : s));
         toast(getSuccessToastProps("Site updated successfully"));
       } else {
         // Add new site
@@ -417,14 +418,15 @@ const SettingsPage = () => {
     name: string;
     color: string;
     timeLimit: number;
-    opensLimit: number;
+    opensLimit?: number;
   }) => {
     try {
       setIsSaving(true);
+      const groupEditData = createGroupDialog.data;
 
-      if (createGroupDialog.data) {
+      if (groupEditData) {
         // Edit existing group
-        await api.updateGroup(createGroupDialog.data.id, {
+        await api.updateGroup(groupEditData.id, {
           name: groupData.name,
           color: groupData.color,
           timeLimit: groupData.timeLimit,
@@ -436,7 +438,7 @@ const SettingsPage = () => {
         setGroups(
           updatedGroupsList.map((g) => ({
             ...g,
-            expanded: g.id === createGroupDialog.data.id ? true : (groups.find(og => og.id === g.id)?.expanded || false),
+            expanded: g.id === groupEditData.id ? true : (groups.find(og => og.id === g.id)?.expanded || false),
           }))
         );
 
@@ -467,6 +469,7 @@ const SettingsPage = () => {
 
   const handleAddSiteToGroup = async (siteName: string) => {
     if (!addToGroupDialog.data) return;
+    const groupData = addToGroupDialog.data;
 
     try {
       setIsSaving(true);
@@ -476,12 +479,12 @@ const SettingsPage = () => {
       });
 
       // Then add it to the group
-      await api.addSiteToGroup(addToGroupDialog.data.id, newSite.id);
+      await api.addSiteToGroup(groupData.id, newSite.id);
 
       // Update local state
       setGroups(
         groups.map((g) =>
-          g.id === addToGroupDialog.data.id
+          g.id === groupData.id
             ? { ...g, sites: [...(g.sites || []), newSite], expanded: true }
             : g
         )

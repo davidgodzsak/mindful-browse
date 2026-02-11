@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Settings, Plus, Globe, Loader2 } from "lucide-react";
+import { UIGroup } from "@/lib/storage";
 import Logo from "../Logo";
 
 interface UnlimitedSiteViewProps {
@@ -9,7 +10,7 @@ interface UnlimitedSiteViewProps {
   selectedOpensLimit: number | null;
   showGroupSelector: boolean;
   isLoadingGroups: boolean;
-  availableGroups: Record<string, unknown>[];
+  availableGroups: UIGroup[];
   isSaving: boolean;
   onSelectTimeLimit: (minutes: number) => void;
   onSelectOpensLimit: (opens: number) => void;

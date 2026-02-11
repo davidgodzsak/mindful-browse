@@ -158,19 +158,22 @@ const TimeoutPage = () => {
         {/* Breathing circle */}
         <div className="mb-10">
           <div
-            className={`w-28 h-28 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center transition-transform duration-[4000ms] ease-in-out ${
+            className={`w-28 h-28 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center transition-transform ease-in-out ${
               breatheIn ? "scale-100" : "scale-75"
             }`}
+            style={{ transitionDuration: "4s" }}
           >
             <div
-              className={`w-20 h-20 rounded-full bg-gradient-to-br from-primary/40 to-primary/60 flex items-center justify-center transition-transform duration-[4000ms] ease-in-out ${
+              className={`w-20 h-20 rounded-full bg-gradient-to-br from-primary/40 to-primary/60 flex items-center justify-center transition-transform ease-in-out ${
                 breatheIn ? "scale-100" : "scale-75"
               }`}
+              style={{ transitionDuration: "4s" }}
             >
               <div
-                className={`w-12 h-12 rounded-full bg-primary shadow-glow flex items-center justify-center transition-transform duration-[4000ms] ease-in-out ${
+                className={`w-12 h-12 rounded-full bg-primary shadow-glow flex items-center justify-center transition-transform ease-in-out ${
                   breatheIn ? "scale-100" : "scale-75"
                 }`}
+                style={{ transitionDuration: "4s" }}
               >
                 <span className="text-primary-foreground text-[10px] font-medium">
                   {breatheIn ? "Breathe" : "Out"}

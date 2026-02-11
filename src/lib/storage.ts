@@ -70,7 +70,7 @@ export function siteFromStorage(
   faviconMap?: Record<string, string>
 ): UISite {
   const site: UISite = {
-    id: storageSite.id,
+    id: storageSite.id || '',
     name: storageSite.urlPattern,
     isEnabled: storageSite.isEnabled,
   };

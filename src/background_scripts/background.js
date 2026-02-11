@@ -1,25 +1,3 @@
-/**
- * @file background.js
- * @description Event-driven background script for the Firefox Distraction Limiter extension.
- * This is the new entry point that replaces main.js with a Manifest V3 compatible
- * event-driven architecture. It acts as an event router, listening to browser events
- * and dispatching them to appropriate handler modules.
- *
- * QA FIX (Phase 4): Enhanced with comprehensive cache invalidation and immediate
- * re-evaluation system to ensure setting changes take effect immediately across all tabs.
- * Fixes issue where disabled/deleted limits didn't clear cache properly.
- *
- * Key responsibilities:
- * - Listen to browser.runtime.onInstalled to initialize alarms
- * - Listen to browser.alarms.onAlarm to handle scheduled tasks
- * - Listen to browser.webNavigation.onBeforeNavigate for proactive site blocking
- * - Listen to browser.runtime.onMessage for UI communication
- * - Listen to browser.action.onClicked for toolbar interaction
- * - Route events to appropriate modules (daily reset, usage tracking, site blocking, etc.)
- * - Maintain stateless architecture with chrome.storage as single source of truth
- * - [NEW] Immediate cache invalidation and tab re-evaluation on settings changes
- */
-
 import { initializeDailyResetAlarm, performDailyReset } from './daily_reset.js';
 import { handlePotentialRedirect, checkAndBlockSite } from './site_blocker.js';
 import {
@@ -35,8 +13,9 @@ import {
   loadDistractingSitesFromStorage,
 } from './distraction_detector.js';
 import { updateBadge } from './badge_manager.js';
+import { getExtensions, setExtension, hasExtensionToday } from './extension_storage.js';
+import { getUsageStats } from './usage_storage.js';
 
-// Storage module imports for message handling
 import {
   getDistractingSites,
   addDistractingSite,
@@ -58,44 +37,20 @@ import {
   removeSiteFromGroup,
 } from './group_storage.js';
 
-// Enhanced validation and error handling utilities
 import {
   categorizeError,
   validateRequiredFields,
   ERROR_TYPES,
 } from './validation_utils.js';
 
-/**
- * Handles the extension installation or startup.
- * Initializes necessary alarms and sets up the extension state.
- *
- * @param {Object} details - Installation details from browser.runtime.onInstalled
- * @param {string} details.reason - Reason for installation ('install', 'update', 'browser_update', etc.)
- */
 async function handleInstalled(details) {
-  console.log('[Background] Extension installed/started:', details.reason);
-
   try {
-    // Initialize the daily reset alarm
     await initializeDailyResetAlarm();
-    console.log('[Background] Daily reset alarm initialized successfully');
-
-    // Initialize the distraction detector
     await initializeDistractionDetector();
-    console.log('[Background] Distraction detector initialized successfully');
   } catch (error) {
     console.error('[Background] Error during initialization:', error);
   }
 }
-
-/**
- * Handles alarm events from the browser.alarms API.
- * Routes different alarm types to their appropriate handlers.
- *
- * @param {Object} alarm - The alarm object that fired
- * @param {string} alarm.name - The name of the alarm
- * @param {number} alarm.scheduledTime - When the alarm was scheduled to fire
- */
 async function handleAlarm(alarm) {
   console.log(
     `[Background] Alarm "${alarm.name}" triggered at ${new Date(alarm.scheduledTime).toISOString()}`
@@ -1635,6 +1590,198 @@ async function handleMessage(message, _sender, _sendResponse) {
         };
       }
 
+      // === Extend Limits ===
+      case 'extendLimit': {
+        try {
+          // 1. Validate required fields
+          const validation = validateRequiredFields(message.payload, [
+            'siteId',
+            'excuse',
+          ]);
+          if (!validation.isValid) {
+            return {
+              success: false,
+              error: {
+                message: validation.error,
+                type: ERROR_TYPES.VALIDATION,
+                isRetryable: false,
+                field: validation.missingField,
+              },
+            };
+          }
+
+          const {
+            siteId,
+            extendedMinutes = 0,
+            extendedOpens = 0,
+            excuse,
+          } = message.payload;
+
+          // 2. Validate excuse length (minimum 35 characters)
+          if (typeof excuse !== 'string' || excuse.length < 35) {
+            return {
+              success: false,
+              error: {
+                message: 'Excuse must be at least 35 characters',
+                type: ERROR_TYPES.VALIDATION,
+                isRetryable: false,
+                field: 'excuse',
+              },
+            };
+          }
+
+          // 3. Validate at least one extension
+          if (
+            typeof extendedMinutes !== 'number' ||
+            typeof extendedOpens !== 'number'
+          ) {
+            return {
+              success: false,
+              error: {
+                message:
+                  'Extended minutes and opens must be numbers',
+                type: ERROR_TYPES.VALIDATION,
+                isRetryable: false,
+              },
+            };
+          }
+
+          if (extendedMinutes <= 0 && extendedOpens <= 0) {
+            return {
+              success: false,
+              error: {
+                message: 'Must extend either time or opens',
+                type: ERROR_TYPES.VALIDATION,
+                isRetryable: false,
+              },
+            };
+          }
+
+          // 4. Check site exists
+          const sites = await getDistractingSites();
+          const site = sites.find((s) => s.id === siteId);
+          if (!site) {
+            return {
+              success: false,
+              error: {
+                message: 'Site not found',
+                type: ERROR_TYPES.NOT_FOUND_ERROR,
+                isRetryable: false,
+              },
+            };
+          }
+
+          // 5. Get current date string
+          const currentTime = new Date();
+          const dateString = currentTime
+            .toISOString()
+            .split('T')[0]; // YYYY-MM-DD
+
+          // 6. Check not already extended today
+          const alreadyExtended = await hasExtensionToday(
+            siteId,
+            dateString
+          );
+          if (alreadyExtended) {
+            return {
+              success: false,
+              error: {
+                message: 'Limit already extended today',
+                type: ERROR_TYPES.VALIDATION,
+                isRetryable: false,
+              },
+            };
+          }
+
+          // 7. Get current usage stats for this site
+          // This is needed so we can calculate "fresh count" from extension time
+          const currentUsage = await getUsageStats(dateString);
+          const siteUsage = currentUsage[siteId] || {
+            timeSpentSeconds: 0,
+            opens: 0,
+          };
+
+          console.log(
+            `[Background] Current usage for site ${siteId} at extension time:`,
+            siteUsage
+          );
+
+          // 8. Store extension with usage stats at time of extension
+          const extensionData = {
+            extendedMinutes,
+            extendedOpens,
+            excuse,
+            timestamp: Date.now(),
+            appliedCount: 1,
+            usageAtExtensionTime: siteUsage,
+          };
+
+          console.log(
+            `[Background] About to store extension for site ${siteId} on date ${dateString}:`,
+            extensionData
+          );
+
+          const success = await setExtension(
+            dateString,
+            siteId,
+            extensionData
+          );
+          if (!success) {
+            console.error(`[Background] FAILED to store extension for site ${siteId}`);
+            return {
+              success: false,
+              error: {
+                message: 'Failed to store extension',
+                type: ERROR_TYPES.STORAGE,
+                isRetryable: true,
+              },
+            };
+          }
+
+          // Verify extension was stored
+          const verifyExtensions = await getExtensions(dateString);
+          console.log(
+            `[Background] Extension verified in storage for site ${siteId}. All extensions:`,
+            verifyExtensions
+          );
+
+          console.log(
+            `[Background] Limit extended for site ${siteId}:`,
+            extensionData
+          );
+
+          // 9. Reload distraction detector cache and re-evaluate tabs
+          await _reloadDistractionDetectorCache();
+          await _refreshCurrentTabBadge();
+          try {
+            await _reEvaluateAllTabs();
+          } catch (error) {
+            console.warn(
+              '[Background] Error re-evaluating all tabs after extension:',
+              error
+            );
+          }
+
+          // 10. Broadcast update
+          await broadcastToUIComponents('limitExtended', {
+            siteId,
+            extensionData,
+          });
+
+          return {
+            success: true,
+            data: { siteId, extensionData },
+            error: null,
+          };
+        } catch (error) {
+          console.error('[Background] Error extending limit:', error);
+          return {
+            success: false,
+            error: categorizeError(error),
+          };
+        }
+      }
+
       default:
         console.warn('[Background] Unknown message action:', message.action);
         return {
@@ -1856,65 +2003,26 @@ async function broadcastToUIComponents(event, data) {
 
 // === Event Listener Registration ===
 
-// Set up all event listeners
 try {
-  // Extension lifecycle events
   browser.runtime.onInstalled.addListener(handleInstalled);
-  console.log('[Background] runtime.onInstalled listener registered');
-
-  // Alarm events
   browser.alarms.onAlarm.addListener(handleAlarm);
-  console.log('[Background] alarms.onAlarm listener registered');
-
-  // Navigation events
   browser.webNavigation.onBeforeNavigate.addListener(handleBeforeNavigate);
-  console.log(
-    '[Background] webNavigation.onBeforeNavigate listener registered'
-  );
-
-  // Tab events
   browser.tabs.onActivated.addListener(handleTabActivated);
   browser.tabs.onUpdated.addListener(handleTabUpdated);
-  console.log('[Background] tab event listeners registered');
-
-  // Window events
   browser.windows.onFocusChanged.addListener(handleWindowFocusChanged);
-  console.log('[Background] windows.onFocusChanged listener registered');
-
-  // Message events for UI communication
   browser.runtime.onMessage.addListener(handleMessage);
-  console.log('[Background] runtime.onMessage listener registered');
-
-  // Action button events
   browser.action.onClicked.addListener(handleActionClick);
-  console.log('[Background] action.onClicked listener registered');
-
-  console.log('[Background] All event listeners registered successfully');
 } catch (listenerError) {
   console.error('[Background] Error registering event listeners:', listenerError);
 }
 
-console.log(
-  '[Background] Firefox Distraction Limiter background script loaded'
-);
-
-// === Startup Initialization ===
-// Ensure daily reset alarm exists on every background script startup
-// This handles cases where Firefox is restarted or the alarm was cleared
 (async () => {
   try {
     const alarm = await browser.alarms.get('dailyResetAlarm');
     if (!alarm) {
-      console.log('[Background] Daily reset alarm not found, creating it now...');
       await initializeDailyResetAlarm();
-      console.log('[Background] Daily reset alarm created on startup');
-    } else {
-      console.log(
-        '[Background] Daily reset alarm already exists, next run at:',
-        new Date(alarm.scheduledTime).toLocaleString()
-      );
     }
   } catch (error) {
-    console.error('[Background] Error checking/initializing daily reset alarm on startup:', error);
+    console.error('[Background] Error initializing daily reset alarm:', error);
   }
 })();

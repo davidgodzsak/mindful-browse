@@ -18,6 +18,7 @@
 - [x] Limit tab -> Add new site dialog -> Let's remove the quick presets, not needed
 - [x] Groups tab -> When removing the value from the time or open limit and clicking update nothing seems to happen, when I refresh the page then the limit is gone, we should update the card after saving the changes so we don't need to refresh the page manually to let the user know the changes have been stored.
 - [ ] Groups tab -> It's not possible to remove the time limit. When I remove the value from the input and update the group the time limit does not disappear. It should be possible to remove the time limit and only have a limit on number of opens instead (but at least one of hte two limits should be added)
+- settings page background and header (with the name and icon) should be the same as the timout page one.
 
 ### Popup
 
@@ -30,13 +31,17 @@
 - [x] When we select an open and a time limit for a page in the popup quick add -> it should store both of the limits. Currently it only stores the limit for the time.
 - [x] When I click add to group for a non-limited site and click on a specific group's button nothing happens. It does not add the site to the group. It should add it and refresh the popup to show the correct state of the group.
 - [ ] When I click on the add to group button, then the groups appear as buttons that makes the popup be bigger than the allocated size and it introduces vertical and horizontal scrollbars. This is a bad experience so let's make sure the popup window can grow horizontally so the content fits inside.
+- [ ] when extending limits for a site in a group, it does not actually get extended for said site
+- [ ] after extending a sites limits, on the site the popup shows the original limits and not the extended limits
+- [ ] after extending a sites limits, there should be an indication that we are spending extension time, not regular 
+
 
 ## Improvements
 
 ### General
 - [x] Popup on the timeout page and settings should show something different, not the regular "not tracked"
-- [ ] Be able to extend current limit for a day, but needs an explanation of at least 35 characters this is somewhere not obvious on the timout page and the popup.
-- [ ] Clean clutter: Simplify code, create a "mental map" and check what can be reused across pages, Delete dead code, delete unnecessary logging and error handling, delete mock data, delete unnecessary components
+- [x] Be able to extend current limit for a day, but needs an explanation of at least 35 characters this is somewhere not obvious on the timout page and the popup.
+- [ ] Clean clutter: Simplify code, create a "mental map document" and check what can be reused across pages, Delete dead code, delete unnecessary logging and error handling, delete mock data
 - [ ] Make sofisticated tests
 - [ ] Refactor to actually use locales, remove eery hardcoded string in favor of this. 
 - [ ] Do we need all 3 TS config files, postcss.config.js, eslint.config.js, components.json, bun.lockb?

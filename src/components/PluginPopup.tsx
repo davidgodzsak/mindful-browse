@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { Settings, Plus, Clock, MousePointerClick, Pause, Play, Globe, Loader2, AlertCircle } from "lucide-react";
+import { Settings, Plus, MousePointerClick, Pause, Play, Globe, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import Logo from "./Logo";
 import CircularProgress from "./CircularProgress";
@@ -36,8 +38,20 @@ const PluginPopup = () => {
 
   // Group selection state
   const [showGroupSelector, setShowGroupSelector] = useState(false);
-  const [availableGroups, setAvailableGroups] = useState<any[]>([]);
+  const [availableGroups, setAvailableGroups] = useState<Record<string, unknown>[]>([]);
   const [isLoadingGroups, setIsLoadingGroups] = useState(false);
+
+  // Extend limit state
+  const [showExtendForm, setShowExtendForm] = useState(false);
+  const [extendMinutes, setExtendMinutes] = useState(0);
+  const [extendOpens, setExtendOpens] = useState(0);
+  const [excuse, setExcuse] = useState("");
+  const [isExtending, setIsExtending] = useState(false);
+  const [extensionError, setExtensionError] = useState<string | null>(null);
+  const [blockedUrl, setBlockedUrl] = useState<string | null>(null);
+  const [originalTimeLimit, setOriginalTimeLimit] = useState(0);
+  const [originalOpensLimit, setOriginalOpensLimit] = useState(0);
+  const [isExtended, setIsExtended] = useState(false);
 
   // Load current page info on mount
   useEffect(() => {
@@ -56,6 +70,19 @@ const PluginPopup = () => {
             setSiteName('Timeout Page');
             setPageType('timeout');
             setIsLimited(false);
+
+            // Extract params from URL
+            const urlParams = new URLSearchParams(pageInfo.url.split('?')[1]);
+            const extractedSiteId = urlParams.get('siteId');
+            const extractedBlockedUrl = urlParams.get('blockedUrl');
+
+            if (extractedSiteId) {
+              setSiteId(extractedSiteId);
+            }
+            if (extractedBlockedUrl) {
+              setBlockedUrl(extractedBlockedUrl);
+            }
+
             return;
           }
           if (pageInfo.url.includes('settings.html') || pageInfo.url.includes('settings/index.html')) {
@@ -133,6 +160,25 @@ const PluginPopup = () => {
 
     loadPageInfo();
   }, [toast]);
+
+  // When on timeout page with siteId, fetch the site limits to show original values
+  useEffect(() => {
+    if (pageType === 'timeout' && siteId) {
+      const fetchSiteLimits = async () => {
+        try {
+          const sites = await api.getSites();
+          const site = sites.find((s) => s.id === siteId);
+          if (site) {
+            setOriginalTimeLimit(site.timeLimit || 0);
+            setOriginalOpensLimit(site.opensLimit || 0);
+          }
+        } catch (error) {
+          console.error('Error fetching site limits:', error);
+        }
+      };
+      fetchSiteLimits();
+    }
+  }, [pageType, siteId]);
 
   // Listen for real-time updates
   useBroadcastUpdates({
@@ -374,6 +420,62 @@ const PluginPopup = () => {
     }
   };
 
+  const handleExtendLimit = async () => {
+    if (excuse.length < 35) {
+      setExtensionError("Excuse must be at least 35 characters");
+      return;
+    }
+    if (extendMinutes <= 0 && extendOpens <= 0) {
+      setExtensionError("Must extend either time or opens");
+      return;
+    }
+
+    try {
+      setIsExtending(true);
+      setExtensionError(null);
+
+      if (!siteId) {
+        setExtensionError("Site ID not found");
+        return;
+      }
+
+      await api.extendLimit(siteId, extendMinutes, extendOpens, excuse);
+
+      toast({
+        title: "Success",
+        description: "Limit extended! Redirecting...",
+      });
+
+      // Reset form
+      setShowExtendForm(false);
+      setExtendMinutes(0);
+      setExtendOpens(0);
+      setExcuse("");
+      setIsExtended(true);
+
+      // Navigate back to original site if we have the URL
+      if (blockedUrl) {
+        setTimeout(() => {
+          browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+            if (tabs[0]) {
+              browser.tabs.update(tabs[0].id, { url: decodeURIComponent(blockedUrl) });
+            }
+          });
+        }, 500);
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      setExtensionError(message);
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsExtending(false);
+    }
+  };
+
   const timeRemaining = Math.max(0, timeLimit - timeUsed);
   const opensRemaining = opensLimit > 0 ? Math.max(0, opensLimit - opensUsed) : 0;
 
@@ -466,6 +568,9 @@ const PluginPopup = () => {
 
   if (!isLimited) {
     if (pageType === 'timeout') {
+      const newTimeLimit = originalTimeLimit + extendMinutes;
+      const newOpensLimit = originalOpensLimit + extendOpens;
+
       return (
         <Card className="w-80 shadow-soft border-0 overflow-hidden">
           <div className="gradient-mint p-4">
@@ -483,12 +588,136 @@ const PluginPopup = () => {
               </div>
               <div>
                 <p className="font-medium">Timeout Page</p>
-                <p className="text-sm text-muted-foreground">Limit reached</p>
+                <p className="text-sm text-muted-foreground">
+                  {showExtendForm || isExtended ? 'Extension Mode' : 'Limit reached'}
+                </p>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground mb-5">
-              You've reached a limit. Take a break and come back later.
-            </p>
+
+            {!showExtendForm && !isExtended && (
+              <p className="text-sm text-muted-foreground mb-4">
+                You've reached a limit. Take a break and come back later.
+              </p>
+            )}
+
+            {/* Extend Limits Section */}
+            {siteId && (
+              <div className="border-t pt-4">
+                {!showExtendForm ? (
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-xl"
+                    onClick={() => setShowExtendForm(true)}
+                  >
+                    Extend Limits
+                  </Button>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">Extend your limit</p>
+
+                    {/* Show original limits and preview of new limits */}
+                    {(originalTimeLimit > 0 || originalOpensLimit > 0) && (
+                      <div className="bg-muted/50 p-3 rounded-lg space-y-2">
+                        {originalTimeLimit > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Time limit:</span>
+                            <span className="font-medium">
+                              {originalTimeLimit} <span className="text-muted-foreground text-[10px]">min</span>
+                              {extendMinutes > 0 && (
+                                <> → {newTimeLimit} <span className="text-muted-foreground text-[10px]">min</span></>
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        {originalOpensLimit > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Open limit:</span>
+                            <span className="font-medium">
+                              {originalOpensLimit} <span className="text-muted-foreground text-[10px]">opens</span>
+                              {extendOpens > 0 && (
+                                <> → {newOpensLimit} <span className="text-muted-foreground text-[10px]">opens</span></>
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Extra minutes */}
+                    <div>
+                      <label className="text-xs text-muted-foreground">Extra minutes (0-60)</label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={60}
+                        value={extendMinutes}
+                        onChange={(e) => setExtendMinutes(parseInt(e.target.value) || 0)}
+                        disabled={isExtending}
+                        className="rounded-xl"
+                      />
+                    </div>
+
+                    {/* Extra opens */}
+                    <div>
+                      <label className="text-xs text-muted-foreground">Extra opens (0-10)</label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={10}
+                        value={extendOpens}
+                        onChange={(e) => setExtendOpens(parseInt(e.target.value) || 0)}
+                        disabled={isExtending}
+                        className="rounded-xl"
+                      />
+                    </div>
+
+                    {/* Excuse */}
+                    <div>
+                      <label className="text-xs text-muted-foreground">
+                        Why do you need more time?
+                      </label>
+                      <Textarea
+                        value={excuse}
+                        onChange={(e) => setExcuse(e.target.value)}
+                        placeholder="Explain why you need to extend this limit..."
+                        disabled={isExtending}
+                        className="min-h-[60px] rounded-xl"
+                      />
+                      <p className={`text-xs mt-1 ${excuse.length >= 35 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        {excuse.length}/35 characters
+                      </p>
+                    </div>
+
+                    {/* Error */}
+                    {extensionError && (
+                      <p className="text-xs text-red-600">{extensionError}</p>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowExtendForm(false);
+                          setExtensionError(null);
+                        }}
+                        disabled={isExtending}
+                        className="flex-1 rounded-xl"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleExtendLimit}
+                        disabled={isExtending || excuse.length < 35 || (extendMinutes <= 0 && extendOpens <= 0)}
+                        className="flex-1 rounded-xl"
+                      >
+                        {isExtending ? "Extending..." : "Extend"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       );

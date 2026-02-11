@@ -1,11 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  BookOpen,
-  Droplets,
-  TreePine,
-  Phone,
-  Brain,
-  Coffee,
   ChevronLeft,
   ChevronRight,
   Shuffle,
@@ -15,53 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Logo from "./Logo";
 import * as api from "@/lib/api";
-
-const suggestions = [
-  {
-    icon: BookOpen,
-    title: "Read a book",
-    description: "Dive into that novel you've been meaning to start",
-    color: "bg-amber-100 text-amber-600",
-  },
-  {
-    icon: Droplets,
-    title: "Drink water",
-    description: "Stay hydrated! Your body will thank you",
-    color: "bg-blue-100 text-blue-600",
-  },
-  {
-    icon: TreePine,
-    title: "Take a walk",
-    description: "Get some fresh air and clear your mind",
-    color: "bg-emerald-100 text-emerald-600",
-  },
-  {
-    icon: Phone,
-    title: "Call someone",
-    description: "Connect with a friend or family member",
-    color: "bg-purple-100 text-purple-600",
-  },
-  {
-    icon: Brain,
-    title: "Meditate",
-    description: "5 minutes of mindfulness can reset your focus",
-    color: "bg-pink-100 text-pink-600",
-  },
-  {
-    icon: Coffee,
-    title: "Take a break",
-    description: "Stretch, make tea, and rest your eyes",
-    color: "bg-orange-100 text-orange-600",
-  },
-];
-
-const defaultQuotes = [
-  "Take a deep breath and go for a short walk 🚶",
-  "How about reading that book you've been meaning to start? 📚",
-  "Drink some water and stretch your body 💧",
-  "Call a friend or family member you haven't talked to in a while 📱",
-  "Try 5 minutes of meditation to clear your mind 🧘",
-];
+import { ACTIVITY_SUGGESTIONS, DEFAULT_QUOTES } from "@/constants/suggestions";
 
 const TimeoutPage = () => {
   // URL params
@@ -73,11 +21,10 @@ const TimeoutPage = () => {
   );
   const [resetTime, setResetTime] = useState<string>("tomorrow");
 
-  // UI state
   const [currentQuote, setCurrentQuote] = useState(0);
   const [currentSuggestion, setCurrentSuggestion] = useState(0);
   const [breatheIn, setBreatheIn] = useState(true);
-  const [quotes, setQuotes] = useState<string[]>(defaultQuotes);
+  const [quotes, setQuotes] = useState<string[]>(DEFAULT_QUOTES);
   const [isLoadingQuote, setIsLoadingQuote] = useState(false);
   const [showRandomMessage, setShowRandomMessage] = useState(true);
   const [showActivitySuggestions, setShowActivitySuggestions] = useState(true);
@@ -145,15 +92,15 @@ const TimeoutPage = () => {
         setCurrentQuote(randomIndex);
       } else {
         // Use default quotes if no messages
-        setQuotes(defaultQuotes);
-        const randomIndex = Math.floor(Math.random() * defaultQuotes.length);
+        setQuotes(DEFAULT_QUOTES);
+        const randomIndex = Math.floor(Math.random() * DEFAULT_QUOTES.length);
         setCurrentQuote(randomIndex);
       }
     } catch (error) {
       console.error("Error loading quotes:", error);
       // Use default quotes on error
-      setQuotes(defaultQuotes);
-      const randomIndex = Math.floor(Math.random() * defaultQuotes.length);
+      setQuotes(DEFAULT_QUOTES);
+      const randomIndex = Math.floor(Math.random() * DEFAULT_QUOTES.length);
       setCurrentQuote(randomIndex);
     } finally {
       setIsLoadingQuote(false);
@@ -178,17 +125,17 @@ const TimeoutPage = () => {
   }, []);
 
   const nextSuggestion = () => {
-    setCurrentSuggestion((prev) => (prev + 1) % suggestions.length);
+    setCurrentSuggestion((prev) => (prev + 1) % ACTIVITY_SUGGESTIONS.length);
   };
 
   const prevSuggestion = () => {
-    setCurrentSuggestion((prev) => (prev - 1 + suggestions.length) % suggestions.length);
+    setCurrentSuggestion((prev) => (prev - 1 + ACTIVITY_SUGGESTIONS.length) % ACTIVITY_SUGGESTIONS.length);
   };
 
   const visibleSuggestions = [
-    suggestions[currentSuggestion],
-    suggestions[(currentSuggestion + 1) % suggestions.length],
-    suggestions[(currentSuggestion + 2) % suggestions.length],
+    ACTIVITY_SUGGESTIONS[currentSuggestion],
+    ACTIVITY_SUGGESTIONS[(currentSuggestion + 1) % ACTIVITY_SUGGESTIONS.length],
+    ACTIVITY_SUGGESTIONS[(currentSuggestion + 2) % ACTIVITY_SUGGESTIONS.length],
   ];
 
   return (

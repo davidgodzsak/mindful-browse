@@ -12,6 +12,20 @@ import { getUsageStats } from './usage_storage.js';
 const DAILY_USAGE_RESET_ALARM_NAME = 'dailyResetAlarm';
 
 /**
+ * Returns the current date as a string in "YYYY-MM-DD" format.
+ * Used for daily-scoped storage keys like usageStats-YYYY-MM-DD and extensions-YYYY-MM-DD.
+ *
+ * @returns {string} The formatted date string (YYYY-MM-DD).
+ */
+export function getCurrentDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const day = now.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Calculates the timestamp for the next occurrence of midnight.
  * This is used to schedule the alarm's first run.
  *
@@ -87,26 +101,45 @@ export async function performDailyReset() {
   );
 
   try {
-    // Get all storage keys to find usage statistics
+    // Get all storage keys to find usage statistics and extensions
     const allStorage = await browser.storage.local.get(null);
     const usageStatsKeys = Object.keys(allStorage).filter((key) =>
       key.startsWith('usageStats-')
     );
+    const extensionKeys = Object.keys(allStorage).filter((key) =>
+      key.startsWith('extensions-')
+    );
 
-    // Identify keys that are not for today
-    const keysToRemove = usageStatsKeys.filter((key) => {
+    // Identify usage stat keys that are not for today
+    const usageKeysToRemove = usageStatsKeys.filter((key) => {
       const dateFromKey = key.replace('usageStats-', '');
       return dateFromKey !== currentDateString;
     });
 
-    if (keysToRemove.length > 0) {
+    if (usageKeysToRemove.length > 0) {
       console.log(
-        `[DailyReset] Removing ${keysToRemove.length} old usage statistics entries:`,
-        keysToRemove
+        `[DailyReset] Removing ${usageKeysToRemove.length} old usage statistics entries:`,
+        usageKeysToRemove
       );
-      await browser.storage.local.remove(keysToRemove);
+      await browser.storage.local.remove(usageKeysToRemove);
     } else {
       console.log('[DailyReset] No old usage statistics found to remove');
+    }
+
+    // Identify extension keys that are not for today
+    const extensionKeysToRemove = extensionKeys.filter((key) => {
+      const dateFromKey = key.replace('extensions-', '');
+      return dateFromKey !== currentDateString;
+    });
+
+    if (extensionKeysToRemove.length > 0) {
+      console.log(
+        `[DailyReset] Removing ${extensionKeysToRemove.length} old extension entries:`,
+        extensionKeysToRemove
+      );
+      await browser.storage.local.remove(extensionKeysToRemove);
+    } else {
+      console.log('[DailyReset] No old extensions found to remove');
     }
 
     // Verify current day's stats still exist (should be preserved)

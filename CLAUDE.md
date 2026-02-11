@@ -41,6 +41,118 @@ React components that run in isolated contexts:
 ### 3. Shared Libraries (`src/lib/`)
 - **`api.ts`**: Type-safe message passing wrapper for background script communication
 - **`storage.ts`**: Type definitions and converters for storage objects
+- **`hooks/`**: Reusable React hooks for common state management patterns
+- **`utils/`**: Utility functions for error handling, formatting, notifications, and constants
+
+## Component Architecture
+
+### Main UI Components Structure
+```
+src/components/
+├── PluginPopup.tsx           # Toolbar popup - manages state and routing
+├── SettingsPage.tsx          # Settings page - manages dialogs and data
+├── TimeoutPage.tsx           # Timeout page - shows when limits reached
+│
+├── popup/                    # Popup view components (extracted from PluginPopup)
+│   ├── NormalPageView.tsx    # Regular site tracking view
+│   ├── DisabledStateView.tsx # Disabled site/group view
+│   ├── UnlimitedSiteView.tsx # Unlimited sites view
+│   ├── TimeoutPageView.tsx   # Timeout + extension form
+│   └── SettingsPageView.tsx  # Settings info view
+│
+└── settings/                 # Settings tab components (extracted from SettingsPage)
+    ├── IndividualSitesTab.tsx    # Individual sites management
+    ├── GroupsTab.tsx            # Groups management
+    ├── MessagesTab.tsx          # Messages & preferences
+    ├── AddSiteDialog.tsx        # Add/edit site dialog
+    ├── CreateGroupDialog.tsx    # Create/edit group dialog
+    └── AddSiteToGroupDialog.tsx # Add site to group dialog
+```
+
+### Component Guidelines
+
+**Main Components (PluginPopup, SettingsPage, TimeoutPage)**
+- Manage overall state and data loading
+- Handle async operations and API calls
+- Route to appropriate view components
+- Use custom hooks for state management
+
+**View Components (popup/*, settings/*)**
+- Pure presentation logic
+- Receive data and callbacks as props
+- Minimal state (only UI state)
+- Reusable across different contexts
+
+**Dialog Components**
+- Separate from parent component logic
+- Handle their own form state
+- Call parent callbacks on submit
+- Support both create and edit modes
+
+## Reusable Hooks
+
+### useToggleSelection
+Manages toggle selection state between a value and null.
+```typescript
+const [selected, toggle, reset] = useToggleSelection<T>(initialValue);
+// toggle(value) - select/deselect
+// reset() - reset to initial value
+```
+**Used in**: PluginPopup (timeLimit/opensLimit selection)
+
+### useDialogManager
+Manages dialog open/close state with associated data.
+```typescript
+const dialog = useDialogManager<T>(initialData);
+// dialog.isOpen - dialog visibility
+// dialog.open(data) - open with data
+// dialog.close() - close dialog
+// dialog.reset() - reset to initial state
+// dialog.data - current data
+// dialog.setIsOpen() - manual state setter
+```
+**Used in**: SettingsPage (site, group, add-to-group dialogs)
+
+### useEditMode
+Manages edit mode state with data tracking.
+```typescript
+const editor = useEditMode<T>(initialData, getItemId);
+// editor.isEditing - editing state
+// editor.editingId - currently edited item ID
+// editor.editingData - current edit data
+// editor.startEdit(data) - start editing
+// editor.updateData(data) - update edit data
+// editor.finishEdit() - finish editing
+// editor.cancelEdit() - cancel without saving
+```
+**Used in**: SettingsPage (message editing)
+
+## Utility Functions
+
+### Error Handler (`src/lib/utils/errorHandler.ts`)
+Consistent error handling across components.
+
+```typescript
+// Extract error message from various error types
+getErrorMessage(error: unknown): string
+
+// Log error with context
+logError(context: string, error: unknown): void
+
+// Get standardized error toast properties
+getErrorToastProps(message: string, title?: string): ToastProps
+
+// Get standardized success toast properties
+getSuccessToastProps(message: string, title?: string): ToastProps
+```
+
+**Pattern**: Use in all async handlers for consistent error UI.
+
+### Constants & Helpers
+- **`constants/urls.ts`**: Page identification helpers
+- **`constants/suggestions.ts`**: Activity suggestions and motivational quotes
+- **`utils/formatting.ts`**: Time conversion utilities
+- **`utils/notifications.ts`**: Toast notification templates
 
 ## Key Patterns
 
@@ -109,23 +221,52 @@ Flexible URL pattern matching:
 - Group related logic together
 - Use clear, descriptive function names
 - Export only necessary functions
+- Extract view components to separate files (1 component per file)
+- Keep main components focused on state/data management, not presentation
+
+### State Management
+- Use custom hooks for common patterns (useToggleSelection, useDialogManager, useEditMode)
+- Extract reusable state patterns to hooks in `src/lib/hooks/`
+- Each component should have a single, clear purpose
+- Avoid prop drilling - pass only necessary data to child components
 
 ### Error Handling
+- Use `errorHandler` utilities for consistent error messages
+- Pattern: `logError(context, error)` + `toast(getErrorToastProps(message))`
 - Validation happens early via `validation_utils.js`
 - Background script wraps responses in `{ success, data, error }`
 - API wrapper throws on errors with categorized error types
-- UI components catch and display user-friendly error messages
+
+**Example**:
+```typescript
+try {
+  await api.doSomething();
+  toast(getSuccessToastProps("Success message"));
+} catch (error) {
+  logError("Error context", error);
+  toast(getErrorToastProps("User-friendly error message"));
+}
+```
 
 ### TypeScript
 - Use strict mode (tsconfig.json)
 - Define interfaces in `src/lib/storage.ts` for storage objects
 - API responses include proper type definitions
 - React components use proper event handler typing
+- Use generic types for reusable hooks
+
+### Component Decomposition
+When a component exceeds ~400 lines:
+1. Identify logical sections (related UI blocks)
+2. Extract to separate view/tab components
+3. Move data fetching/state to parent
+4. Pass data and callbacks as props to children
 
 ### Testing
 - Unit test background scripts in isolation
 - Integration tests verify message passing between components
 - Test storage operations with mock storage
+- Test custom hooks with React Testing Library
 
 ## Storage Schema
 
@@ -162,6 +303,40 @@ npm run preview       # Preview production build
 - **Storage Limits**: chrome.storage.local has limits (~10MB total)
 - **Security**: Always validate user input; avoid eval; sanitize URLs
 
+## Project Evolution & Documentation
+
+### Cleanup Phases Completed
+
+**Phase 1-4**: Foundation cleanup
+- Extracted constants and helpers to dedicated files
+- Removed excessive documentation and console logs
+- Cleaned up imports and unused code
+
+**Phase 5**: Component extraction (PluginPopup)
+- Extracted 5 view components from monolithic PluginPopup
+- Reduced from 989 → 541 lines (-45%)
+
+**Phase 5b**: Component extraction (SettingsPage)
+- Extracted 3 tab components from SettingsPage
+- Reduced from 1244 → 831 lines (-33%)
+
+**Phase 6**: State management consolidation
+- Part 1: Created reusable hooks for common patterns
+- Part 2: Refactored components to use new hooks
+- Part 3: Integrated error handler utility across components
+- Result: Consolidated 11+ manual state variables into 4 reusable hooks
+
+**Phase 1 (Audit)**: Component & dependency audit
+- Documented UI component usage (13 active, 30 for future)
+- Removed 3 unused dependencies (date-fns, zod, @hookform/resolvers)
+- Fixed all npm vulnerabilities (8 → 0)
+
+### Reference Documents
+
+- **PHASE1_UI_AUDIT.md** - Component usage analysis and dependency documentation
+- **CLEANUP_SUMMARY.md** - Overall cleanup phase metrics and improvements
+- **PHASE6_ANALYSIS.md** - State duplication analysis and refactoring guide
+
 ## Common Gotchas
 
 1. **State Management**: Don't try to store state in background script variables; always use chrome.storage
@@ -169,6 +344,41 @@ npm run preview       # Preview production build
 3. **Alarms**: Create alarms in initialization; they persist across extension reloads
 4. **Cache Invalidation**: Changes to sites/limits need to update badge, re-check blocked tabs
 5. **URL Matching**: The same URL pattern may match multiple sites; extension blocks based on highest match priority
+6. **Hook Dependencies**: Custom hooks must return consistent types; use generics for flexibility
+7. **Dialog Management**: Always reset dialog state when closing to prevent data leaks between operations
+
+## UI Component Library
+
+### Available UI Components
+The `src/components/ui/` folder contains 43 shadcn/ui components available for use:
+
+**Actively Used** (13): Badge, Button, Card, Dialog, Input, Label, Progress, Switch, Tabs, Textarea, Toaster, Sonner, TooltipProvider, Toast
+
+**Available for Future Use** (30): accordion, alert-dialog, aspect-ratio, avatar, breadcrumb, calendar, carousel, checkbox, collapsible, command, context-menu, dropdown-menu, drawer, form, hover-card, input-otp, menubar, navigation-menu, pagination, popover, radio-group, scroll-area, select, separator, sheet, skeleton, slider, table, toggle, toggle-group
+
+### Using UI Components
+
+All shadcn/ui components follow consistent patterns:
+```typescript
+// Import from @/components/ui/
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+
+// Use with Tailwind classes for styling
+<Button className="bg-primary hover:bg-primary/90">Click me</Button>
+
+// Components are accessible and keyboard-navigable out of the box
+```
+
+### Adding New Components
+
+When you need a new component not in the list:
+1. Check `src/components/ui/` for existing implementations
+2. If needed, components can be easily added via shadcn/cli
+3. Import and use with consistent Tailwind styling
+4. Document new component usage in this guide
+
+See [shadcn/ui Components](https://ui.shadcn.com/) for documentation and visual examples.
 
 ## References
 
@@ -176,3 +386,4 @@ npm run preview       # Preview production build
 - [Manifest V3 Migration Guide](https://developer.chrome.com/docs/extensions/mv3/)
 - [React Component Docs](https://react.dev/)
 - [shadcn/ui Components](https://ui.shadcn.com/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/)

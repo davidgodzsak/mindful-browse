@@ -59,3 +59,10 @@
 - [ ] Make visualisations of tracked data
 - [ ] Display changes or trends over days/weeks/months
 - [ ] Suggest distracting pages to add limits to (but remember it's ok to spend time on pages that are not distracting: e.g. jira, github, etc.), if the user cancels a suggestion then let's remember and not try to suggest it again
+
+### Info page
+- [ ] Create a basic info page that reuses the base of the timout page (background, header) and the theme and existing UI components as much as possible
+- [ ] The purpose of the page is to tell users what this extension is about, and ask them to donate for improvements or if they like it. It should contain an header, intro to the project, values (described in the next line) 
+- [ ] Show what values the user gets: saving their time and being mindful about how they spend their online time, it's free - we just want more happy people on the planet, respecting privacy: not-tracking the user, not collecting data, everythign is stored locally and we don't have access to them, nothing is sent over the wire, it's ad free - user can opt in to get non disturbing ads to keep the project alive, donations are accepted
+- [ ] It should show the user that they can donate (stripe, paypal, buy me a coffee, patreon)
+- [ ] It should have links to report bugs and feature suggestions (github)

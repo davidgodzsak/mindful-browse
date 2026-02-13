@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { Clock, Quote, Loader2, FolderOpen, Info } from "lucide-react";
+import { Clock, Quote, Loader2, FolderOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import Logo from "./Logo";
+import PageTemplate from "./PageTemplate";
 import AddSiteDialog from "./settings/AddSiteDialog";
 import CreateGroupDialog from "./settings/CreateGroupDialog";
 import AddSiteToGroupDialog from "./settings/AddSiteToGroupDialog";
@@ -15,6 +14,7 @@ import { useBroadcastUpdates } from "@/hooks/useBroadcastUpdates";
 import { useDialogManager } from "@/lib/hooks/useDialogManager";
 import { useEditMode } from "@/lib/hooks/useEditMode";
 import { logError, getErrorToastProps, getSuccessToastProps } from "@/lib/utils/errorHandler";
+import { getVersionFromManifest } from "@/lib/utils/manifestVersion";
 import type { UISite, UIGroup } from "@/lib/storage";
 
 const SettingsPage = () => {
@@ -47,15 +47,8 @@ const SettingsPage = () => {
   // Load version from manifest
   useEffect(() => {
     const loadVersion = async () => {
-      try {
-        const response = await fetch('/manifest.json');
-        const manifest = await response.json();
-        if (manifest.version) {
-          setVersion(manifest.version);
-        }
-      } catch (error) {
-        console.error("Failed to load version:", error);
-      }
+      const ver = await getVersionFromManifest();
+      setVersion(ver);
     };
     loadVersion();
   }, []);
@@ -558,34 +551,29 @@ const SettingsPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen gradient-calm flex items-center justify-center">
+      <PageTemplate
+        version={version}
+        onOpenInfo={handleOpenInfo}
+        layout="centered"
+        showVersionBadge={false}
+      >
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Loading settings...</p>
         </div>
-      </div>
+      </PageTemplate>
     );
   }
 
   return (
-    <div className="min-h-screen gradient-calm">
-      {/* Header */}
-      <header className="sticky top-0 z-10 glass border-b border-border/50">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Logo size="md" />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleOpenInfo}
-            className="hover:bg-primary/10"
-            title="About this extension"
-          >
-            <Info size={20} />
-          </Button>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-6 py-8 pb-20">
+    <>
+      <PageTemplate
+        version={version}
+        onOpenInfo={handleOpenInfo}
+        layout="normal"
+        showVersionBadge={true}
+        logoSize="md"
+      >
         <Tabs defaultValue="limits" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 rounded-2xl p-1 bg-muted/80">
             <TabsTrigger value="limits" className="rounded-xl">
@@ -658,7 +646,7 @@ const SettingsPage = () => {
             />
           </TabsContent>
         </Tabs>
-      </main>
+    </PageTemplate>
 
       {/* Dialogs */}
       <AddSiteDialog
@@ -686,12 +674,7 @@ const SettingsPage = () => {
         groupName={addToGroupDialog.data?.name || ""}
         onAdd={handleAddSiteToGroup}
       />
-
-      {/* Version footer - fixed at bottom */}
-      <footer className="fixed bottom-0 left-0 right-0 text-center py-3 text-xs text-muted-foreground bg-background">
-        Distraction Limiter {version && `v${version}`}
-      </footer>
-    </div>
+    </>
   );
 };
 

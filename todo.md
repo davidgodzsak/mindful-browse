@@ -18,7 +18,7 @@
 - [x] Limit tab -> Add new site dialog -> Let's remove the quick presets, not needed
 - [x] Groups tab -> When removing the value from the time or open limit and clicking update nothing seems to happen, when I refresh the page then the limit is gone, we should update the card after saving the changes so we don't need to refresh the page manually to let the user know the changes have been stored.
 - [ ] Groups tab -> It's not possible to remove the time limit. When I remove the value from the input and update the group the time limit does not disappear. It should be possible to remove the time limit and only have a limit on number of opens instead (but at least one of hte two limits should be added)
-- settings page background and header (with the name and icon) should be the same as the timout page one.
+-[ ] settings page background and header (with the name and icon) should be the same as the timout page one.
 
 ### Popup
 
@@ -42,8 +42,8 @@
 - [x] Popup on the timeout page and settings should show something different, not the regular "not tracked"
 - [x] Be able to extend current limit for a day, but needs an explanation of at least 35 characters this is somewhere not obvious on the timout page and the popup.
 - [x] Clean clutter: Simplify code, create a "mental map document" and check what can be reused across pages, Delete dead code, delete unnecessary logging and error handling, delete mock data
-- [ ] Refactor to actually use locales, remove eery hardcoded string in favor of this. 
-- [ ] Be able to limit just a subdomain or a subpage (e.g. shorts.youtube.com or reddit.com/r/hungary)
+- [ ] Refactor to actually use locales, remove every hardcoded string in favor of this. 
+- [ ] Be able to limit just a subdomain or a subpage (e.g. shorts.youtube.com or reddit.com/r/hungary or youtube.com/shorts)
 
 ### Settings page
 - [x] be able to turn limits on or off by having a "switch" button next to each page in the limits tab (even on pages individually that are in a group) (reuse the one in the settings -> messages tab -> display options)

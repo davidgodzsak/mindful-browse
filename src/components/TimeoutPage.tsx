@@ -4,11 +4,10 @@ import {
   ChevronRight,
   Shuffle,
   Loader2,
-  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import Logo from "./Logo";
+import PageTemplate from "./PageTemplate";
 import * as api from "@/lib/api";
 import { ACTIVITY_SUGGESTIONS, DEFAULT_QUOTES } from "@/constants/suggestions";
 
@@ -144,32 +143,14 @@ const TimeoutPage = () => {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
-        {/* Floating shapes */}
-        <div className="absolute top-20 left-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-200/30 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-100/50 rounded-full blur-3xl" />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6">
-        {/* Header with Logo and Info button */}
-        <div className="absolute top-6 left-6 right-6 flex items-center justify-between">
-          <Logo size="sm" />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleOpenInfo}
-            className="hover:bg-white/20 text-foreground"
-            title="About this extension"
-          >
-            <Info size={20} />
-          </Button>
-        </div>
-
-        {/* Breathing circle */}
+    <PageTemplate
+      version=""
+      onOpenInfo={handleOpenInfo}
+      layout="centered"
+      showVersionBadge={false}
+      logoSize="sm"
+    >
+      {/* Breathing circle */}
         <div className="mb-10">
           <div
             className={`w-28 h-28 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center transition-transform ease-in-out ${
@@ -296,9 +277,8 @@ const TimeoutPage = () => {
           <p className="text-xs">
             {siteName} • Resets at {resetTime}
           </p>
-        </div>
       </div>
-    </div>
+    </PageTemplate>
   );
 };
 

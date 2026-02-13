@@ -5,6 +5,7 @@ import Logo from "@/components/Logo";
 import PluginPopup from "@/components/PluginPopup";
 import SettingsPage from "@/components/SettingsPage";
 import TimeoutPage from "@/components/TimeoutPage";
+import InfoPage from "@/components/InfoPage";
 
 const Index = () => {
   const [popupVariant, setPopupVariant] = useState<"limited" | "unlimited">("limited");
@@ -27,7 +28,7 @@ const Index = () => {
 
         {/* Screen Showcase */}
         <Tabs defaultValue="popup" className="space-y-8">
-          <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3 rounded-2xl p-1.5 bg-white shadow-soft">
+          <TabsList className="grid w-full max-w-lg mx-auto grid-cols-4 rounded-2xl p-1.5 bg-white shadow-soft">
             <TabsTrigger value="popup" className="rounded-xl data-[state=active]:shadow-sm">
               Popup
             </TabsTrigger>
@@ -36,6 +37,9 @@ const Index = () => {
             </TabsTrigger>
             <TabsTrigger value="timeout" className="rounded-xl data-[state=active]:shadow-sm">
               Timeout
+            </TabsTrigger>
+            <TabsTrigger value="info" className="rounded-xl data-[state=active]:shadow-sm">
+              Info
             </TabsTrigger>
           </TabsList>
 
@@ -105,11 +109,27 @@ const Index = () => {
                 Shown when a time or opens limit is reached
               </p>
             </div>
-            
+
             <Card className="overflow-hidden rounded-3xl shadow-soft border-0">
               <div className="h-[700px] overflow-y-auto">
                 {/* @ts-expect-error - Demo page with mock props for component showcase */}
                 <TimeoutPage siteName="facebook.com" groupName="Social Media" resetTime="12:00 AM" limitType="time" />
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* Info Tab */}
+          <TabsContent value="info">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-semibold mb-2">Info Page</h2>
+              <p className="text-muted-foreground">
+                Project information, values, donations, and support links
+              </p>
+            </div>
+
+            <Card className="overflow-hidden rounded-3xl shadow-soft border-0">
+              <div className="h-[700px] overflow-y-auto">
+                <InfoPage />
               </div>
             </Card>
           </TabsContent>

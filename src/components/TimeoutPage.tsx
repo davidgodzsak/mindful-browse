@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Shuffle,
   Loader2,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -107,6 +108,10 @@ const TimeoutPage = () => {
     }
   };
 
+  const handleOpenInfo = () => {
+    window.open(browser.runtime.getURL("pages/info/index.html"), "_blank");
+  };
+
   const shuffleQuote = () => {
     // Pick a random quote from the current pool
     if (quotes.length > 0) {
@@ -150,9 +155,18 @@ const TimeoutPage = () => {
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6">
-        {/* Logo */}
-        <div className="absolute top-6 left-6">
+        {/* Header with Logo and Info button */}
+        <div className="absolute top-6 left-6 right-6 flex items-center justify-between">
           <Logo size="sm" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleOpenInfo}
+            className="hover:bg-white/20 text-foreground"
+            title="About this extension"
+          >
+            <Info size={20} />
+          </Button>
         </div>
 
         {/* Breathing circle */}

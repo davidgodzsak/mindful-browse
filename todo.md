@@ -59,8 +59,16 @@
 - [ ] Suggest distracting pages to add limits to (but remember it's ok to spend time on pages that are not distracting: e.g. jira, github, etc.), if the user cancels a suggestion then let's remember and not try to suggest it again
 
 ### Info page
-- [ ] Create a basic info page that reuses the base of the timout page (background, header) and the theme and existing UI components as much as possible
-- [ ] The purpose of the page is to tell users what this extension is about, and ask them to donate for improvements or if they like it. It should contain an header, intro to the project, values (described in the next line) 
-- [ ] Show what values the user gets: saving their time and being mindful about how they spend their online time, it's free - we just want more happy people on the planet, respecting privacy: not-tracking the user, not collecting data, everythign is stored locally and we don't have access to them, nothing is sent over the wire, it's ad free - user can opt in to get non disturbing ads to keep the project alive, donations are accepted
-- [ ] It should show the user that they can donate (stripe, paypal, buy me a coffee, patreon)
-- [ ] It should have links to report bugs and feature suggestions (github)
+- [x] Create a basic info page that reuses the base of the timout page (background, header) and the theme and existing UI components as much as possible
+- [x] The purpose of the page is to tell users what this extension is about, and ask them to donate for improvements or if they like it. It should contain an header, intro to the project, values (described in the next line)
+- [x] Show what values the user gets: saving their time and being mindful about how they spend their online time, it's free - we just want more happy people on the planet, respecting privacy: not-tracking the user, not collecting data, everythign is stored locally and we don't have access to them, nothing is sent over the wire, it's ad free - user can opt in to get non disturbing ads to keep the project alive, donations are accepted
+- [x] It should show the user that they can donate (stripe, paypal, buy me a coffee, patreon)
+- [x] It should have links to report bugs and feature suggestions (github)
+- [x] Add info page as a link to popup header, and settings page as well as timout page. make it prominent but not disturbing
+- [x] Popup on info page should just show a similar message to how it is displayed on settings page, show a general text about being on the info page.
+- [x] The info page should have a button to link to the settings page and also some short description about what to do to set up (max 2 lines)
+
+### Onboarding
+- [ ] When starting the app for the first time we should have a "social media" group as an example with blue color and 30min 30 opens limit. 
+- [ ] Let's bootstrap the app on the first start/install with adding the default messages (so they are not only in the backend code, but added to the storage, and if the user removes the messages they are gone for real -> then the timeout page should say something about setting up messages and linking to the settings page)
+- [ ] When opening the settings page for the first time the user should get an onboarding flow. a setp by step process with info poups to go through the onboardin: - first setting up individual pages, then creting a group and then adding pages to groups, lastly about adding messages.

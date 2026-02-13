@@ -12,6 +12,7 @@ import { UnlimitedSiteView } from "./popup/UnlimitedSiteView";
 import { DisabledStateView } from "./popup/DisabledStateView";
 import { TimeoutPageView } from "./popup/TimeoutPageView";
 import { SettingsPageView } from "./popup/SettingsPageView";
+import { InfoPageView } from "./popup/InfoPageView";
 
 const PluginPopup = () => {
   const { toast } = useToast();
@@ -31,7 +32,7 @@ const PluginPopup = () => {
   const [timeLimit, setTimeLimit] = useState(0);
   const [opensUsed, setOpensUsed] = useState(0);
   const [opensLimit, setOpensLimit] = useState(0);
-  const [pageType, setPageType] = useState<'normal' | 'timeout' | 'settings'>('normal');
+  const [pageType, setPageType] = useState<'normal' | 'timeout' | 'settings' | 'info'>('normal');
 
   // Preset selection state (using custom hook to reduce duplication)
   const [selectedTimeLimit, toggleTimeLimit, resetTimeLimitSelection] = useToggleSelection<number>(null);
@@ -82,6 +83,12 @@ const PluginPopup = () => {
           if (pageInfo.url.includes('settings.html') || pageInfo.url.includes('settings/index.html')) {
             setSiteName('Settings Page');
             setPageType('settings');
+            setIsLimited(false);
+            return;
+          }
+          if (pageInfo.url.includes('info.html') || pageInfo.url.includes('info/index.html')) {
+            setSiteName('Info Page');
+            setPageType('info');
             setIsLimited(false);
             return;
           }
@@ -276,6 +283,12 @@ const PluginPopup = () => {
     });
   };
 
+  const handleOpenInfo = () => {
+    browser.tabs.create({
+      url: browser.runtime.getURL("pages/info/index.html"),
+    });
+  };
+
   const handleTurnOnSite = async () => {
     if (!siteId) return;
     try {
@@ -455,12 +468,17 @@ const PluginPopup = () => {
           isSaving={false}
           onExtendLimit={handleExtendLimit}
           onOpenSettings={handleOpenSettings}
+          onOpenInfo={handleOpenInfo}
         />
       );
     }
 
     if (pageType === 'settings') {
-      return <SettingsPageView onOpenSettings={handleOpenSettings} />;
+      return <SettingsPageView onOpenSettings={handleOpenSettings} onOpenInfo={handleOpenInfo} />;
+    }
+
+    if (pageType === 'info') {
+      return <InfoPageView onOpenSettings={handleOpenSettings} />;
     }
 
     // Unlimited site - show quick add UI
@@ -480,6 +498,7 @@ const PluginPopup = () => {
         onAddToGroup={handleAddToGroup}
         onCloseGroupSelector={() => setShowGroupSelector(false)}
         onOpenSettings={handleOpenSettings}
+        onInfo={handleOpenInfo}
       />
     );
   }
@@ -496,6 +515,7 @@ const PluginPopup = () => {
       opensLimit={opensLimit}
       opensRemaining={opensRemaining}
       onSettings={handleOpenSettings}
+      onInfo={handleOpenInfo}
     />
   );
 };

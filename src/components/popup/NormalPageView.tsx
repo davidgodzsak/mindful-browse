@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Settings, MousePointerClick } from "lucide-react";
+import { Settings, MousePointerClick, Info } from "lucide-react";
 import Logo from "../Logo";
 import CircularProgress from "../CircularProgress";
 
@@ -15,6 +15,7 @@ interface NormalPageViewProps {
   opensLimit: number;
   opensRemaining: number;
   onSettings: () => void;
+  onInfo?: () => void;
 }
 
 export function NormalPageView({
@@ -27,20 +28,34 @@ export function NormalPageView({
   opensLimit,
   opensRemaining,
   onSettings,
+  onInfo,
 }: NormalPageViewProps) {
   return (
     <Card className="w-80 shadow-soft border-0 overflow-hidden">
       <div className="gradient-mint p-4">
         <div className="flex items-center justify-between">
           <Logo size="sm" />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onSettings}
-            className="hover:bg-white/50"
-          >
-            <Settings size={18} />
-          </Button>
+          <div className="flex gap-1">
+            {onInfo && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onInfo}
+                className="hover:bg-white/50"
+                title="About this extension"
+              >
+                <Info size={18} />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onSettings}
+              className="hover:bg-white/50"
+            >
+              <Settings size={18} />
+            </Button>
+          </div>
         </div>
       </div>
 

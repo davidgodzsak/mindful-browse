@@ -32,6 +32,7 @@
     {
       "resources": [
         "pages/timeout/index.html",
+        "pages/info/index.html",
         "assets/index.css"
       ],
       "matches": ["<all_urls>"]

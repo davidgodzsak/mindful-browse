@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Clock, Quote, Loader2, FolderOpen } from "lucide-react";
+import { Clock, Quote, Loader2, FolderOpen, Info } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import Logo from "./Logo";
 import AddSiteDialog from "./settings/AddSiteDialog";
@@ -549,6 +550,12 @@ const SettingsPage = () => {
     createGroupDialog.open(group);
   };
 
+  const handleOpenInfo = () => {
+    browser.tabs.create({
+      url: browser.runtime.getURL("pages/info/index.html"),
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen gradient-calm flex items-center justify-center">
@@ -566,6 +573,15 @@ const SettingsPage = () => {
       <header className="sticky top-0 z-10 glass border-b border-border/50">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Logo size="md" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleOpenInfo}
+            className="hover:bg-primary/10"
+            title="About this extension"
+          >
+            <Info size={20} />
+          </Button>
         </div>
       </header>
 

@@ -85,7 +85,8 @@ export default defineConfig(({ mode }) => ({
         demo: resolve(__dirname, 'src/index.html'),
         popup: resolve (__dirname , 'src/pages/popup/index.html'),
         settings: resolve (__dirname , 'src/pages/settings/index.html'),
-        timeout: resolve (__dirname , 'src/pages/timeout/index.html')
+        timeout: resolve (__dirname , 'src/pages/timeout/index.html'),
+        info: resolve (__dirname , 'src/pages/info/index.html')
       },
       output: {
         entryFileNames: "assets/[name].js",

@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Info } from "lucide-react";
+import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Logo from "./Logo";
@@ -54,7 +54,7 @@ const PageTemplate = ({
               className="hover:bg-white/20 text-foreground"
               title="About this extension"
             >
-              <Info size={20} />
+              <Settings size={20} />
             </Button>
           </div>
         ) : isMinimal ? (
@@ -74,7 +74,7 @@ const PageTemplate = ({
                 className="hover:bg-white/20 text-foreground"
                 title="About this extension"
               >
-                <Info size={20} />
+                <Settings size={20} />
               </Button>
             </div>
           </header>
@@ -96,7 +96,7 @@ const PageTemplate = ({
                   className="hover:bg-white/20"
                   title="About this extension"
                 >
-                  <Info size={20} />
+                  <Settings size={20} />
                 </Button>
               </div>
             </div>
@@ -108,8 +108,8 @@ const PageTemplate = ({
           // Centered layout: content goes directly here
           children
         ) : (
-          // Normal layout: content in main with max-width constraint
-          <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-8">
+          // Normal layout: content in main with max-width constraint, centered
+          <main className="flex-1 w-full px-6 py-8 flex flex-col items-center">
             {children}
           </main>
         )}

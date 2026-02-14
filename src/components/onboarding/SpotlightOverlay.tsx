@@ -107,7 +107,7 @@ export function SpotlightOverlay({
               : "translateY(0)",
         }}
       >
-        <Card className="border-2 border-emerald-500 bg-gradient-to-br from-emerald-50 to-teal-50 shadow-lg rounded-3xl">
+        <Card className="border border-emerald-500 bg-gradient-to-br from-emerald-50 to-teal-50 shadow-lg rounded-3xl">
           {showSuccess && successMessage ? (
             <div className="p-5 space-y-3">
               <div className="flex items-center gap-3">
@@ -172,16 +172,16 @@ export function SpotlightOverlay({
 
         {/* Arrow pointer */}
         <div
-          className="absolute w-3 h-3 bg-emerald-50 border-2 border-emerald-500 rotate-45"
+          className={`transform absolute w-3 h-3 ${bubblePosition.direction === "right" ? "border-b border-l" : "border-l border-t"} rotate-45 border-emerald-500 bg-emerald-50`}
           style={{
             top:
               bubblePosition.direction === "right"
                 ? "calc(50% - 6px)"
-                : "-6px",
+                : "-5.5px",
             left:
               bubblePosition.direction === "right"
-                ? "-6px"
-                : "calc(50% - 6px)",
+                ? "-5.5px"
+                : "calc(50% - 6px)"
           }}
         />
       </div>

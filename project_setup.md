@@ -4,7 +4,7 @@
 
 **Verdict: YES, the project is moderately overengineered from a boilerplate perspective.**
 
-The Focus Flow extension started from a Vite + React + shadcn/ui template (likely Lovable.dev) and retained dependencies and configurations designed for full-scale web applications. For a Firefox extension, this is overkill.
+The Mindful Browse extension started from a Vite + React + shadcn/ui template (likely Lovable.dev) and retained dependencies and configurations designed for full-scale web applications. For a Firefox extension, this is overkill.
 
 **Impact**: ~25-30% bloat in dependencies. The extension works fine, but could be significantly streamlined without losing functionality.
 

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import PageTemplate from "./PageTemplate";
 import * as api from "@/lib/api";
-import { ACTIVITY_SUGGESTIONS, DEFAULT_QUOTES } from "@/constants/suggestions";
+import { ACTIVITY_SUGGESTIONS } from "@/constants/suggestions";
 
 const TimeoutPage = () => {
   // URL params
@@ -24,7 +24,7 @@ const TimeoutPage = () => {
   const [currentQuote, setCurrentQuote] = useState(0);
   const [currentSuggestion, setCurrentSuggestion] = useState(0);
   const [breatheIn, setBreatheIn] = useState(true);
-  const [quotes, setQuotes] = useState<string[]>(DEFAULT_QUOTES);
+  const [quotes, setQuotes] = useState<string[]>([]);
   const [isLoadingQuote, setIsLoadingQuote] = useState(false);
   const [showRandomMessage, setShowRandomMessage] = useState(true);
   const [showActivitySuggestions, setShowActivitySuggestions] = useState(true);
@@ -91,17 +91,15 @@ const TimeoutPage = () => {
         const randomIndex = Math.floor(Math.random() * texts.length);
         setCurrentQuote(randomIndex);
       } else {
-        // Use default quotes if no messages
-        setQuotes(DEFAULT_QUOTES);
-        const randomIndex = Math.floor(Math.random() * DEFAULT_QUOTES.length);
-        setCurrentQuote(randomIndex);
+        // No messages - empty state
+        setQuotes([]);
+        setCurrentQuote(0);
       }
     } catch (error) {
       console.error("Error loading quotes:", error);
-      // Use default quotes on error
-      setQuotes(DEFAULT_QUOTES);
-      const randomIndex = Math.floor(Math.random() * DEFAULT_QUOTES.length);
-      setCurrentQuote(randomIndex);
+      // On error, show empty state
+      setQuotes([]);
+      setCurrentQuote(0);
     } finally {
       setIsLoadingQuote(false);
     }
@@ -181,41 +179,65 @@ const TimeoutPage = () => {
         {/* Main motivational quote - Most prominent */}
         {showRandomMessage && (
           <div className="max-w-2xl w-full text-center mb-10">
-            <p className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground leading-tight min-h-[200px] flex justify-center">
-              {quotes[currentQuote]}
-            </p>
-            {/* Quote dots */}
-            {quotes.length > 1 && (
-              <div className="flex justify-center gap-3 mt-8 mb-4">
-                {quotes.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentQuote(index)}
-                    className={`rounded-full transition-all ${
-                      index === currentQuote
-                        ? "bg-primary w-3 h-3"
-                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-2.5 h-2.5"
-                    }`}
-                    title={`Quote ${index + 1}`}
-                  />
-                ))}
+            {quotes.length > 0 ? (
+              <>
+                <p className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground leading-tight min-h-[200px] flex justify-center">
+                  {quotes[currentQuote]}
+                </p>
+                {/* Quote dots */}
+                {quotes.length > 1 && (
+                  <div className="flex justify-center gap-3 mt-8 mb-4">
+                    {quotes.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentQuote(index)}
+                        className={`rounded-full transition-all ${
+                          index === currentQuote
+                            ? "bg-primary w-3 h-3"
+                            : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-2.5 h-2.5"
+                        }`}
+                        title={`Quote ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Randomize button */}
+                <Button
+                  variant="outline"
+                  onClick={shuffleQuote}
+                  disabled={isLoadingQuote}
+                  className="rounded-full"
+                >
+                  {isLoadingQuote ? (
+                    <Loader2 size={16} className="animate-spin mr-2" />
+                  ) : (
+                    <Shuffle size={16} className="mr-2" />
+                  )}
+                  Random
+                </Button>
+              </>
+            ) : (
+              <div className="min-h-[200px] flex flex-col items-center justify-center text-center">
+                <p className="text-lg text-muted-foreground mb-4">
+                  No motivational messages set up yet
+                </p>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Add messages in the extension settings to see them here
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    browser.tabs.create({
+                      url: browser.runtime.getURL("pages/settings/index.html"),
+                    });
+                  }}
+                  className="rounded-full"
+                >
+                  Open Settings
+                </Button>
               </div>
             )}
-
-            {/* Randomize button */}
-            <Button
-              variant="outline"
-              onClick={shuffleQuote}
-              disabled={isLoadingQuote}
-              className="rounded-full"
-            >
-              {isLoadingQuote ? (
-                <Loader2 size={16} className="animate-spin mr-2" />
-              ) : (
-                <Shuffle size={16} className="mr-2" />
-              )}
-              Random
-            </Button>
           </div>
         )}
 

@@ -9,10 +9,15 @@ import AddSiteToGroupDialog from "./settings/AddSiteToGroupDialog";
 import { IndividualSitesTab } from "./settings/IndividualSitesTab";
 import { GroupsTab } from "./settings/GroupsTab";
 import { MessagesTab } from "./settings/MessagesTab";
+import { SpotlightOverlay } from "./onboarding/SpotlightOverlay";
+import { WelcomeScreen } from "./onboarding/WelcomeScreen";
+import { CompletionScreen } from "./onboarding/CompletionScreen";
+import { ONBOARDING_STEPS } from "@/lib/hooks/useOnboarding";
 import * as api from "@/lib/api";
 import { useBroadcastUpdates } from "@/hooks/useBroadcastUpdates";
 import { useDialogManager } from "@/lib/hooks/useDialogManager";
 import { useEditMode } from "@/lib/hooks/useEditMode";
+import { useOnboarding } from "@/lib/hooks/useOnboarding";
 import { logError, getErrorToastProps, getSuccessToastProps } from "@/lib/utils/errorHandler";
 import { getVersionFromManifest } from "@/lib/utils/manifestVersion";
 import type { UISite, UIGroup } from "@/lib/storage";
@@ -43,6 +48,9 @@ const SettingsPage = () => {
 
   // Message editing using custom hook to reduce state duplication
   const messageEditor = useEditMode<{ id: string; text: string }>(null, (msg) => msg.id);
+
+  // Onboarding flow
+  const onboarding = useOnboarding();
 
   // Load version from manifest
   useEffect(() => {
@@ -380,6 +388,15 @@ const SettingsPage = () => {
         });
         setIndividualSites([...individualSites, newSite]);
         toast(getSuccessToastProps("Site added successfully"));
+
+        // Trigger onboarding success if we're on step 1
+        if (
+          onboarding.isVisible &&
+          onboarding.currentStep === ONBOARDING_STEPS.ADD_SITE &&
+          !onboarding.showSuccessMessage
+        ) {
+          onboarding.showSuccess("Yay! 🎉 You created a page limit!");
+        }
       }
       addSiteDialog.close();
     } catch (error) {
@@ -486,6 +503,17 @@ const SettingsPage = () => {
 
       addToGroupDialog.close();
       toast(getSuccessToastProps("Site added to group successfully"));
+
+      // Trigger onboarding advancement if we're on step 3 and just added to Social Media
+      if (
+        onboarding.isVisible &&
+        onboarding.currentStep === ONBOARDING_STEPS.ADD_TO_GROUP &&
+        groupData.name === "Social Media" &&
+        !onboarding.showSuccessMessage
+      ) {
+        // Move directly to MESSAGES_TAB without delay
+        onboarding.nextStep();
+      }
     } catch (error) {
       logError("Error adding site to group", error);
       toast(getErrorToastProps("Failed to add site to group. Please try again."));
@@ -574,17 +602,46 @@ const SettingsPage = () => {
         showVersionBadge={true}
         logoSize="md"
       >
-        <Tabs defaultValue="limits" className="space-y-6">
+        <Tabs
+          defaultValue="limits"
+          className="space-y-6"
+          onValueChange={(value) => {
+            // Auto-advance when user clicks on specific tabs during onboarding
+            if (
+              value === "groups" &&
+              onboarding.isVisible &&
+              onboarding.currentStep === ONBOARDING_STEPS.GROUPS_TAB
+            ) {
+              onboarding.nextStep();
+            }
+            // Auto-advance when user clicks messages tab during MESSAGES_TAB step
+            if (
+              value === "messages" &&
+              onboarding.isVisible &&
+              onboarding.currentStep === ONBOARDING_STEPS.MESSAGES_TAB
+            ) {
+              onboarding.nextStep();
+            }
+          }}
+        >
           <TabsList className="grid w-full grid-cols-3 rounded-2xl p-1 bg-muted/80">
             <TabsTrigger value="limits" className="rounded-xl">
               <Clock size={16} className="mr-2" />
               Limits
             </TabsTrigger>
-            <TabsTrigger value="groups" className="rounded-xl">
+            <TabsTrigger
+              value="groups"
+              className="rounded-xl"
+              data-testid="groups-tab"
+            >
               <FolderOpen size={16} className="mr-2" />
               Groups
             </TabsTrigger>
-            <TabsTrigger value="messages" className="rounded-xl">
+            <TabsTrigger
+              value="messages"
+              className="rounded-xl"
+              data-testid="messages-tab"
+            >
               <Quote size={16} className="mr-2" />
               Messages
             </TabsTrigger>
@@ -646,7 +703,7 @@ const SettingsPage = () => {
             />
           </TabsContent>
         </Tabs>
-    </PageTemplate>
+      </PageTemplate>
 
       {/* Dialogs */}
       <AddSiteDialog
@@ -674,6 +731,92 @@ const SettingsPage = () => {
         groupName={addToGroupDialog.data?.name || ""}
         onAdd={handleAddSiteToGroup}
       />
+
+      {/* Welcome Screen */}
+      {onboarding.isVisible && onboarding.currentStep === ONBOARDING_STEPS.WELCOME && (
+        <WelcomeScreen
+          onStart={onboarding.nextStep}
+          onSkip={onboarding.skipOnboarding}
+        />
+      )}
+
+      {/* Spotlight Onboarding */}
+      {onboarding.isVisible && onboarding.currentStep === ONBOARDING_STEPS.ADD_SITE && (
+        <SpotlightOverlay
+          targetSelector='[data-testid="add-site-button"]'
+          title="Add Your First Limit"
+          message="Click here to add your first site. Specify time spent OR number of opens (or both) to create your first limit!"
+          onSkip={onboarding.skipOnboarding}
+          hideNextButton={true}
+          showSuccess={onboarding.showSuccessMessage}
+          successMessage={onboarding.successMessage}
+        />
+      )}
+
+      {onboarding.isVisible && onboarding.currentStep === ONBOARDING_STEPS.GROUPS_TAB && (
+        <SpotlightOverlay
+          targetSelector='[data-testid="groups-tab"]'
+          title="Limit Related Sites Together"
+          message="Click Groups to limit related sites together and prevent time-wasting alternatives. For example, if you limit Instagram but not TikTok, you might just switch to TikTok instead. We've created 'Social Media' as an example."
+          onSkip={onboarding.skipOnboarding}
+          hideNextButton={true}
+          showSuccess={onboarding.showSuccessMessage}
+          successMessage={onboarding.successMessage}
+        />
+      )}
+
+      {onboarding.isVisible && onboarding.currentStep === ONBOARDING_STEPS.ADD_TO_GROUP && (
+        <SpotlightOverlay
+          targetSelector='[data-testid="social-media-add-site"]'
+          title="Add Sites to Groups"
+          message="You can add individual sites to groups. Try adding Facebook, TikTok, or Instagram to the Social Media group to manage them together!"
+          onSkip={onboarding.skipOnboarding}
+          hideNextButton={true}
+          showSuccess={onboarding.showSuccessMessage}
+          successMessage={onboarding.successMessage}
+        />
+      )}
+
+      {onboarding.isVisible && onboarding.currentStep === ONBOARDING_STEPS.MESSAGES_TAB && (
+        <SpotlightOverlay
+          targetSelector='[data-testid="messages-tab"]'
+          title="Customize Motivational Messages"
+          message="Click Messages to manage the motivational text shown when you hit your limits on the timeout page. We've added some examples you can use or customize!"
+          onSkip={onboarding.skipOnboarding}
+          hideNextButton={true}
+          showSuccess={onboarding.showSuccessMessage}
+          successMessage={onboarding.successMessage}
+        />
+      )}
+
+      {onboarding.isVisible && onboarding.currentStep === ONBOARDING_STEPS.MESSAGES_LIST && (
+        <SpotlightOverlay
+          targetSelector='[data-testid="messages-list"]'
+          title="Edit Your Messages"
+          message="Here you can edit, add, or remove motivational messages. Click any message to customize it to match your interests or use the edit button. These messages will appear when you hit your time limits!"
+          onSkip={onboarding.skipOnboarding}
+          onContinue={onboarding.nextStep}
+          showSuccess={onboarding.showSuccessMessage}
+          successMessage={onboarding.successMessage}
+        />
+      )}
+
+      {onboarding.isVisible && onboarding.currentStep === ONBOARDING_STEPS.COMPLETION && (
+        <CompletionScreen onClose={onboarding.completeOnboarding} />
+      )}
+
+      {onboarding.isVisible && onboarding.currentStep === ONBOARDING_STEPS.TOOLBAR_ICON && (
+        <SpotlightOverlay
+          targetSelector='[data-testid="toolbar-icon"]'
+          title="Quick Access"
+          message="You can also click the Mindful Browse icon in your toolbar to quickly add limits to any site you're currently viewing!"
+          onSkip={onboarding.skipOnboarding}
+          onFinish={onboarding.completeOnboarding}
+          isLastStep={true}
+          showSuccess={onboarding.showSuccessMessage}
+          successMessage={onboarding.successMessage}
+        />
+      )}
     </>
   );
 };

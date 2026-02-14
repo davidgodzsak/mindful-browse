@@ -13,6 +13,7 @@ import { DisabledStateView } from "./popup/DisabledStateView";
 import { TimeoutPageView } from "./popup/TimeoutPageView";
 import { SettingsPageView } from "./popup/SettingsPageView";
 import { InfoPageView } from "./popup/InfoPageView";
+import { FirstInstallView } from "./popup/FirstInstallView";
 
 const PluginPopup = () => {
   const { toast } = useToast();
@@ -47,6 +48,10 @@ const PluginPopup = () => {
   const [blockedUrl, setBlockedUrl] = useState<string | null>(null);
   const [originalTimeLimit, setOriginalTimeLimit] = useState(0);
   const [originalOpensLimit, setOriginalOpensLimit] = useState(0);
+
+  // Onboarding state
+  const [onboardingCompleted, setOnboardingCompleted] = useState(true);
+  const [skipFirstInstallView, setSkipFirstInstallView] = useState(false);
 
   // Load current page info on mount
   useEffect(() => {
@@ -156,6 +161,18 @@ const PluginPopup = () => {
     };
 
     loadPageInfo();
+
+    // Check if onboarding is completed
+    const checkOnboardingState = async () => {
+      try {
+        const onboardingData = await api.getOnboardingState();
+        setOnboardingCompleted(onboardingData?.completed || false);
+      } catch (error) {
+        console.warn("Could not check onboarding state:", error);
+      }
+    };
+
+    checkOnboardingState();
   }, [toast]);
 
   // When on timeout page with siteId, fetch the site limits to show original values
@@ -180,6 +197,7 @@ const PluginPopup = () => {
   // Listen for real-time updates
   useBroadcastUpdates({
     siteAdded: () => {
+
       // Refresh page data when new site is added (might be current site)
       setIsLoading(true);
       api.getCurrentPageInfo().then((pageInfo) => {
@@ -429,7 +447,7 @@ const PluginPopup = () => {
       <Card className="w-80 shadow-soft border-0 overflow-hidden">
         <div className="gradient-mint p-4">
           <div className="flex items-center justify-between">
-            <div className="text-lg font-bold text-foreground">Focus Flow</div>
+            <div className="text-lg font-bold text-foreground">Mindful Browse</div>
             <div className="w-6 h-6" />
           </div>
         </div>
@@ -453,6 +471,16 @@ const PluginPopup = () => {
         isSaving={isSaving}
         onTurnOnSite={handleTurnOnSite}
         onOpenSettings={handleOpenSettings}
+      />
+    );
+  }
+
+  // Show first-install welcome when onboarding is not completed and on normal page
+  if (!onboardingCompleted && pageType === 'normal' && !skipFirstInstallView) {
+    return (
+      <FirstInstallView
+        onOpenSettings={handleOpenSettings}
+        onAddLimit={() => setSkipFirstInstallView(true)}
       />
     );
   }

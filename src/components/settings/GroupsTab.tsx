@@ -39,7 +39,7 @@ export function GroupsTab({
         <div>
           <h2 className="text-xl font-semibold">Manage Groups</h2>
           <p className="text-muted-foreground">
-            Create groups to share limits across related sites
+            Limit related sites together to prevent switching to alternatives
           </p>
         </div>
         <Button
@@ -93,6 +93,7 @@ export function GroupsTab({
                       className="rounded-full h-6 text-xs"
                       onClick={() => onAddSiteToGroup(group)}
                       disabled={isSaving}
+                      data-testid={group.name === "Social Media" ? "social-media-add-site" : undefined}
                     >
                       <Plus size={12} className="mr-1" />
                       Add

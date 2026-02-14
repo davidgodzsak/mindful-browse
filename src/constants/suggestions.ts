@@ -52,11 +52,3 @@ export const ACTIVITY_SUGGESTIONS: Suggestion[] = [
     color: 'bg-orange-100 text-orange-600',
   },
 ];
-
-export const DEFAULT_QUOTES = [
-  'Take a deep breath and go for a short walk 🚶',
-  'How about reading that book you\'ve been meaning to start? 📚',
-  'Drink some water and stretch your body 💧',
-  'Call a friend or family member you haven\'t talked to in a while 📱',
-  'Try 5 minutes of meditation to clear your mind 🧘',
-];

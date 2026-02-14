@@ -85,6 +85,7 @@ export function IndividualSitesTab({
               size="sm"
               onClick={onAddSite}
               disabled={isSaving}
+              data-testid="add-site-button"
             >
               <Plus size={16} className="mr-2" />
               Add site

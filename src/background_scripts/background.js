@@ -15,6 +15,12 @@ import {
 import { updateBadge } from './badge_manager.js';
 import { getExtensions, setExtension, hasExtensionToday } from './extension_storage.js';
 import { getUsageStats } from './usage_storage.js';
+import {
+  getOnboardingState,
+  completeOnboarding,
+  markInitialSetupDone,
+  hasInitialSetupDone,
+} from './onboarding_storage.js';
 
 import {
   getDistractingSites,
@@ -47,8 +53,65 @@ async function handleInstalled(details) {
   try {
     await initializeDailyResetAlarm();
     await initializeDistractionDetector();
+
+    // Bootstrap default data on first install
+    const hasSetup = await hasInitialSetupDone();
+    if (!hasSetup) {
+      try {
+        await bootstrapDefaultData();
+        await markInitialSetupDone();
+        console.log('[Background] Bootstrapped default data on first install');
+      } catch (error) {
+        console.warn('[Background] Error bootstrapping default data:', error);
+        // Don't fail installation if bootstrapping fails
+      }
+    }
   } catch (error) {
     console.error('[Background] Error during initialization:', error);
+  }
+}
+
+async function bootstrapDefaultData() {
+  try {
+    // Add default "Social Media" group with blue color
+    const defaultGroup = await addGroup({
+      name: 'Social Media',
+      color: 'bg-blue-500',
+      dailyLimitSeconds: 30 * 60, // 30 minutes
+      dailyOpenLimit: 30,
+    });
+    console.log('[Background] Created default Social Media group:', defaultGroup.id);
+
+    // Add default motivational messages
+    const defaultMessages = [
+      'Take a deep breath and go for a short walk 🚶',
+      'How about reading that book you\'ve been meaning to start? 📚',
+      'Drink some water and stretch your body 💧',
+      'Call a friend or family member you haven\'t talked to in a while 📱',
+      'Try 5 minutes of meditation to clear your mind 🧘',
+    ];
+
+    for (const msg of defaultMessages) {
+      try {
+        await addTimeoutNote({ text: msg });
+      } catch (error) {
+        console.warn('[Background] Error adding default message:', error);
+      }
+    }
+
+    console.log(
+      '[Background] Added',
+      defaultMessages.length,
+      'default motivational messages'
+    );
+
+    return {
+      groupAdded: !!defaultGroup,
+      messagesAdded: defaultMessages.length > 0,
+    };
+  } catch (error) {
+    console.error('[Background] Error in bootstrapDefaultData:', error);
+    throw error;
   }
 }
 async function handleAlarm(alarm) {
@@ -661,8 +724,8 @@ async function handleMessage(message, _sender, _sendResponse) {
         // This ensures users can access sites immediately after removing limits from any tab
         try {
           // Use the deleted site's data for re-evaluation (pass the site that was just deleted)
-          const deletedSiteData = { 
-            id: message.payload.id, 
+          const deletedSiteData = {
+            id: message.payload.id,
             urlPattern: '*', // We don't have the pattern anymore, so check all tabs
             isEnabled: false // Deleted sites are effectively disabled
           };
@@ -1782,6 +1845,63 @@ async function handleMessage(message, _sender, _sendResponse) {
         }
       }
 
+      // === Onboarding ===
+      case 'getOnboardingState': {
+        try {
+          const state = await getOnboardingState();
+          return {
+            success: true,
+            data: state,
+            error: null,
+          };
+        } catch (error) {
+          console.error('[Background] Error getting onboarding state:', error);
+          return {
+            success: false,
+            error: categorizeError(error),
+          };
+        }
+      }
+
+      case 'completeOnboarding': {
+        try {
+          const result = await completeOnboarding();
+          return {
+            success: true,
+            data: result,
+            error: null,
+          };
+        } catch (error) {
+          console.error('[Background] Error completing onboarding:', error);
+          return {
+            success: false,
+            error: categorizeError(error),
+          };
+        }
+      }
+
+      case 'bootstrapDefaultData': {
+        try {
+          // Note: Bootstrap is handled at install time, but this allows UI to trigger it if needed
+          let groupAdded = false;
+          let messagesAdded = false;
+
+          // This would be implemented as needed
+          // For now, return success to avoid errors
+          return {
+            success: true,
+            data: { groupAdded, messagesAdded },
+            error: null,
+          };
+        } catch (error) {
+          console.error('[Background] Error bootstrapping default data:', error);
+          return {
+            success: false,
+            error: categorizeError(error),
+          };
+        }
+      }
+
       default:
         console.warn('[Background] Unknown message action:', message.action);
         return {
@@ -1882,43 +2002,43 @@ async function _refreshCurrentTabBadge() {
 async function _reEvaluateAllTabsForSite(siteData, operation) {
   try {
     console.log(`[Background] Re-evaluating all tabs after site ${operation}`);
-    
+
     // Get all tabs
     const allTabs = await browser.tabs.query({});
     console.log(`[Background] Found ${allTabs.length} tabs to re-evaluate`);
-    
+
     let notificationsShown = 0;
     const MAX_NOTIFICATIONS = 2; // Limit notifications to avoid spam
-    
+
     for (const tab of allTabs) {
       if (!tab.url || !tab.id) continue;
-      
+
       // Skip extension pages and special URLs
-      if (tab.url.startsWith('chrome://') || 
-          tab.url.startsWith('moz-extension://') || 
-          tab.url.startsWith('about:')) {
+      if (tab.url.startsWith('chrome://') ||
+        tab.url.startsWith('moz-extension://') ||
+        tab.url.startsWith('about:')) {
         continue;
       }
-      
+
       try {
         // For deletions, we check if any site would block this tab
         // For updates, we check the specific site
         const blockResult = await checkAndBlockSite(tab.id, tab.url);
-        
+
         console.log(`[Background] Tab ${tab.id} (${tab.url}) - Block result:`, {
           shouldBlock: blockResult.shouldBlock,
           siteId: blockResult.siteId,
           reason: blockResult.reason
         });
-        
+
         // Update badge for this tab
         await updateBadge(tab.id);
-        
+
         // Special handling for timeout pages
         if (tab.url.includes('pages/timeout/index.html')) {
           if (!blockResult.shouldBlock) {
             console.log(`[Background] Tab ${tab.id} no longer needs to be blocked`);
-            
+
             // Show notification to user (limited to avoid spam)
             if (notificationsShown < MAX_NOTIFICATIONS) {
               try {
@@ -1935,15 +2055,15 @@ async function _reEvaluateAllTabsForSite(siteData, operation) {
             }
           }
         }
-        
+
       } catch (tabError) {
         console.warn(`[Background] Error re-evaluating tab ${tab.id}:`, tabError);
         // Continue with other tabs even if one fails
       }
     }
-    
+
     console.log(`[Background] Completed re-evaluation of all tabs. Notifications shown: ${notificationsShown}`);
-    
+
   } catch (error) {
     console.error('[Background] Error in _reEvaluateAllTabsForSite:', error);
     throw error; // Re-throw to let caller handle

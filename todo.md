@@ -34,6 +34,7 @@
 - [ ] when extending limits for a site in a group, it does not actually get extended for said site
 - [ ] after extending a sites limits, on the site the popup shows the original limits and not the extended limits
 - [ ] after extending a sites limits, there should be an indication that we are spending extension time, not regular 
+- [ ] Popup extending limits input always contains a 0 that is prefixed to whatever the user inputs. It should be a normal number input field.
 
 
 ## Improvements
@@ -69,6 +70,6 @@
 - [x] The info page should have a button to link to the settings page and also some short description about what to do to set up (max 2 lines)
 
 ### Onboarding
-- [ ] When starting the app for the first time we should have a "social media" group as an example with blue color and 30min 30 opens limit. 
-- [ ] Let's bootstrap the app on the first start/install with adding the default messages (so they are not only in the backend code, but added to the storage, and if the user removes the messages they are gone for real -> then the timeout page should say something about setting up messages and linking to the settings page)
-- [ ] When opening the settings page for the first time the user should get an onboarding flow. a setp by step process with info poups to go through the onboardin: - first setting up individual pages, then creting a group and then adding pages to groups, lastly about adding messages.
+- [x] When starting the app for the first time we should have a "social media" group as an example with blue color and 30min 30 opens limit.
+- [x] Let's bootstrap the app on the first start/install with adding the default messages (so they are not only in the backend code, but added to the storage, and if the user removes the messages they are gone for real -> then the timeout page should say something about setting up messages and linking to the settings page)
+- [x] When opening the settings page for the first time the user should get an onboarding flow. a setp by step process with info poups to go through the onboardin: - first setting up individual pages, then creting a group and then adding pages to groups, lastly about adding messages.

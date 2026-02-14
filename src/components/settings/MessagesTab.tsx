@@ -82,7 +82,7 @@ export function MessagesTab({
           </div>
 
           {/* Messages list */}
-          <div className="space-y-2">
+          <div className="space-y-2" data-testid="messages-list">
             {messages.map((message) => (
               <div
                 key={message.id}

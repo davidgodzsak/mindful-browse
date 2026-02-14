@@ -266,6 +266,26 @@ export async function extendLimit(
   });
 }
 
+export async function getOnboardingState(): Promise<{ completed: boolean } | null> {
+  try {
+    return await sendMessage('getOnboardingState');
+  } catch (error) {
+    // If onboarding state doesn't exist, return null
+    return null;
+  }
+}
+
+export async function completeOnboarding(): Promise<{ completed: boolean }> {
+  return sendMessage('completeOnboarding');
+}
+
+export async function bootstrapDefaultData(): Promise<{
+  groupAdded: boolean;
+  messagesAdded: boolean;
+}> {
+  return sendMessage('bootstrapDefaultData');
+}
+
 export function listenForBroadcasts(
   callback: (event: string, data: any) => void
 ): () => void {

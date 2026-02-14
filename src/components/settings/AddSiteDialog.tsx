@@ -77,7 +77,7 @@ const AddSiteDialog = ({ open, onOpenChange, onAdd, initialSite, isEditing }: Ad
             <Label htmlFor="site-name">Website URL</Label>
             <Input
               id="site-name"
-              placeholder="e.g., facebook.com"
+              placeholder="e.g. tiktok.com"
               value={siteName}
               onChange={(e) => setSiteName(e.target.value)}
               className="rounded-xl"

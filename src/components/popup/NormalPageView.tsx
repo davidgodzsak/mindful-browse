@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Settings, MousePointerClick, Info } from "lucide-react";
+import { t } from "@/lib/utils/i18n";
 import Logo from "../Logo";
 import CircularProgress from "../CircularProgress";
 
@@ -42,7 +43,7 @@ export function NormalPageView({
                 size="icon"
                 onClick={onInfo}
                 className="hover:bg-white/50"
-                title="About this extension"
+                title={t("normalPageView_button_tooltip")}
               >
                 <Info size={18} />
               </Button>
@@ -82,7 +83,7 @@ export function NormalPageView({
             <span className="text-3xl font-bold text-foreground">
               {timeRemaining}
             </span>
-            <span className="text-sm text-muted-foreground">min left</span>
+            <span className="text-sm text-muted-foreground">{t("normalPageView_minLeft")}</span>
           </CircularProgress>
         </div>
 
@@ -91,7 +92,7 @@ export function NormalPageView({
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <MousePointerClick size={16} className="text-muted-foreground" />
-                <span className="text-sm font-medium">Opens today</span>
+                <span className="text-sm font-medium">{t("normalPageView_opensLimit_label")}</span>
               </div>
               <span className="text-sm font-bold text-foreground">
                 {opensUsed} / {opensLimit}
@@ -102,7 +103,7 @@ export function NormalPageView({
               className="h-2"
             />
             <p className="text-xs text-muted-foreground mt-2">
-              {opensRemaining} opens remaining
+              {t("normalPageView_opensRemaining", opensRemaining.toString())}
             </p>
           </div>
         )}

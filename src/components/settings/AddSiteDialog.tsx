@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { t } from "@/lib/utils/i18n";
 
 interface AddSiteDialogProps {
   open: boolean;
@@ -48,7 +49,7 @@ const AddSiteDialog = ({ open, onOpenChange, onAdd, initialSite, isEditing }: Ad
 
     // Ensure at least one limit is set
     if (!parsedTimeLimit && !parsedOpensLimit) {
-      alert("Please set at least a time limit or an opens limit");
+      alert(t("dialog_addSite_validation"));
       return;
     }
 
@@ -67,17 +68,17 @@ const AddSiteDialog = ({ open, onOpenChange, onAdd, initialSite, isEditing }: Ad
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Site" : "Add New Site"}</DialogTitle>
+          <DialogTitle>{isEditing ? t("dialog_addSite_title_edit") : t("dialog_addSite_title_create")}</DialogTitle>
           <DialogDescription>
-            {isEditing ? "Update the limits for this website." : "Add a website to track with time or opens limits."}
+            {isEditing ? t("dialog_addSite_description_edit") : t("dialog_addSite_description_create")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="site-name">Website URL</Label>
+            <Label htmlFor="site-name">{t("dialog_addSite_label_websiteUrl")}</Label>
             <Input
               id="site-name"
-              placeholder="e.g. tiktok.com"
+              placeholder={t("dialog_addSite_placeholder_websiteUrl")}
               value={siteName}
               onChange={(e) => setSiteName(e.target.value)}
               className="rounded-xl"
@@ -87,12 +88,12 @@ const AddSiteDialog = ({ open, onOpenChange, onAdd, initialSite, isEditing }: Ad
             <div className="space-y-2">
               <Label htmlFor="time-limit" className="flex items-center gap-2">
                 <Clock size={14} />
-                Time limit (min)
+                {t("dialog_addSite_label_timeLimit")}
               </Label>
               <Input
                 id="time-limit"
                 type="number"
-                placeholder="e.g., 30"
+                placeholder={t("dialog_addSite_placeholder_timeLimit")}
                 value={timeLimit}
                 onChange={(e) => setTimeLimit(e.target.value)}
                 className="rounded-xl"
@@ -101,12 +102,12 @@ const AddSiteDialog = ({ open, onOpenChange, onAdd, initialSite, isEditing }: Ad
             <div className="space-y-2">
               <Label htmlFor="opens-limit" className="flex items-center gap-2">
                 <MousePointerClick size={14} />
-                Opens limit
+                {t("dialog_addSite_label_opensLimit")}
               </Label>
               <Input
                 id="opens-limit"
                 type="number"
-                placeholder="e.g., 10"
+                placeholder={t("dialog_addSite_placeholder_opensLimit")}
                 value={opensLimit}
                 onChange={(e) => setOpensLimit(e.target.value)}
                 className="rounded-xl"
@@ -116,7 +117,7 @@ const AddSiteDialog = ({ open, onOpenChange, onAdd, initialSite, isEditing }: Ad
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
-            Cancel
+            {t("dialog_addSite_button_cancel")}
           </Button>
           <Button
             onClick={handleAdd}
@@ -124,11 +125,11 @@ const AddSiteDialog = ({ open, onOpenChange, onAdd, initialSite, isEditing }: Ad
             className="rounded-xl"
           >
             {isEditing ? (
-              <>Update Site</>
+              <>{t("dialog_addSite_button_update")}</>
             ) : (
               <>
                 <Plus size={16} className="mr-2" />
-                Add Site
+                {t("dialog_addSite_button_add")}
               </>
             )}
           </Button>

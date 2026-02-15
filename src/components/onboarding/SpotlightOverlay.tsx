@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { t } from "@/lib/utils/i18n";
 
 interface SpotlightOverlayProps {
   targetSelector: string;
@@ -140,7 +141,7 @@ export function SpotlightOverlay({
                   onClick={onSkip}
                   className="rounded-lg"
                 >
-                  Skip onboarding
+                  {t("spotlight_button_skip")}
                 </Button>
                 {!hideNextButton && (
                   <>
@@ -150,7 +151,7 @@ export function SpotlightOverlay({
                         onClick={onFinish}
                         className="rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white gap-1"
                       >
-                        Finish
+                        {t("spotlight_button_finish")}
                         <ChevronRight size={16} />
                       </Button>
                     ) : (
@@ -159,7 +160,7 @@ export function SpotlightOverlay({
                         onClick={onContinue}
                         className="rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white gap-1"
                       >
-                        Next
+                        {t("spotlight_button_next")}
                         <ChevronRight size={16} />
                       </Button>
                     )}

@@ -1,0 +1,103 @@
+name: Publish Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Get version from manifest
+        id: version
+        run: |
+          VERSION=$(jq -r '.version' src/manifest.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Create dist zip
+        run: |
+          cd dist
+          zip -r "../focus-flow-${{ steps.version.outputs.version }}.zip" .
+          cd ..
+          ls -lh focus-flow-*.zip
+
+      - name: Upload zip to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: focus-flow-${{ steps.version.outputs.version }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to Firefox Add-ons (AMO)
+        run: |
+          npm install -g web-ext
+          web-ext sign \
+            --api-key="${{ secrets.FIREFOX_API_KEY }}" \
+            --api-secret="${{ secrets.FIREFOX_API_SECRET }}" \
+            --source-dir=dist \
+            --artifacts-dir=./artifacts
+        continue-on-error: true
+
+      - name: Upload Firefox signed XPI to release
+        if: success()
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*.xpi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Publish to Chrome Web Store
+        run: node .github/scripts/publish-chrome.js
+        env:
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          EXTENSION_ZIP: focus-flow-${{ steps.version.outputs.version }}.zip
+        continue-on-error: true
+
+      - name: Create deployment status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const version = require('./src/manifest.json').version;
+
+            const message = `🚀 Release v${version} deployment started!\n\n` +
+              `✅ Build: Successful\n` +
+              `📦 Artifacts: focus-flow-${version}.zip\n\n` +
+              `**Store Status:**\n` +
+              `🦊 Firefox: Submitted to AMO (check signing status)\n` +
+              `🎨 Chrome: Uploaded to Web Store (manual review required)\n\n` +
+              `Check the workflow run for detailed logs.`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            }).catch(() => {
+              // Ignore if no associated issue
+            });

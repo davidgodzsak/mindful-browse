@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Settings, Play, Pause } from "lucide-react";
+import { t } from "@/lib/utils/i18n";
 import Logo from "../Logo";
 
 interface DisabledStateViewProps {
@@ -22,21 +23,21 @@ export function DisabledStateView({
 }: DisabledStateViewProps) {
   const getMessage = () => {
     if (disabledReason === "both") {
-      return "Tracking is paused for this site and its group. Click below to turn it back on.";
+      return t("disabledStateView_message_both");
     } else if (disabledReason === "group") {
-      return "Tracking is paused for the group this site belongs to. Click below to enable it.";
+      return t("disabledStateView_message_group");
     } else {
-      return "Tracking is paused for this site. Click below to turn it back on.";
+      return t("disabledStateView_message_site");
     }
   };
 
   const getLabel = () => {
     if (disabledReason === "group") {
-      return `${groupName} (disabled)`;
+      return `${groupName} (${t("disabledStateView_disabled").toLowerCase()})`;
     } else if (disabledReason === "both") {
-      return `${siteName} (disabled)`;
+      return `${siteName} (${t("disabledStateView_disabled").toLowerCase()})`;
     } else {
-      return "Disabled";
+      return t("disabledStateView_disabled");
     }
   };
 
@@ -75,7 +76,7 @@ export function DisabledStateView({
           disabled={isSaving}
         >
           <Play size={16} className="mr-2" />
-          Turn on tracking
+          {t("disabledStateView_button")}
         </Button>
       </CardContent>
     </Card>

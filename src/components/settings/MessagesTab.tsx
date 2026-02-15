@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { t } from "@/lib/utils/i18n";
 
 interface Message {
   id: string;
@@ -50,9 +51,9 @@ export function MessagesTab({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Motivational Messages</h2>
+        <h2 className="text-xl font-semibold">{t("messages_section_title")}</h2>
         <p className="text-muted-foreground">
-          These will appear when you reach your limits
+          {t("messages_section_description")}
         </p>
       </div>
 
@@ -61,7 +62,7 @@ export function MessagesTab({
           {/* Add new message */}
           <div className="flex gap-3">
             <Input
-              placeholder="Add a new motivational message..."
+              placeholder={t("messages_input_placeholder")}
               value={newMessage}
               onChange={(e) => onNewMessageChange(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && onAddMessage()}
@@ -139,7 +140,7 @@ export function MessagesTab({
                         className="h-8 w-8 text-muted-foreground hover:text-foreground"
                         onClick={() => onStartEditMessage(message)}
                         disabled={isSaving}
-                        title="Edit message"
+                        title={t("messages_button_edit_title")}
                       >
                         <Edit2 size={14} />
                       </Button>
@@ -149,7 +150,7 @@ export function MessagesTab({
                         className="h-8 w-8 text-destructive"
                         onClick={() => onRemoveMessage(message.id)}
                         disabled={isSaving}
-                        title="Delete message"
+                        title={t("messages_button_delete_title")}
                       >
                         <Trash2 size={14} />
                       </Button>
@@ -165,14 +166,14 @@ export function MessagesTab({
       {/* Preferences */}
       <Card className="shadow-soft border-0">
         <CardHeader>
-          <CardTitle className="text-lg">Display Options</CardTitle>
+          <CardTitle className="text-lg">{t("messages_display_options_title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Show random message</p>
+              <p className="font-medium">{t("messages_option_randomMessage")}</p>
               <p className="text-sm text-muted-foreground">
-                Display a random message each time
+                {t("messages_option_randomMessage_description")}
               </p>
             </div>
             <Switch
@@ -183,9 +184,9 @@ export function MessagesTab({
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Show activity suggestions</p>
+              <p className="font-medium">{t("messages_option_suggestions")}</p>
               <p className="text-sm text-muted-foreground">
-                Display cards with things to do instead
+                {t("messages_option_suggestions_description")}
               </p>
             </div>
             <Switch

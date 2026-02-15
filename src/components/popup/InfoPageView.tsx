@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Settings, Info } from "lucide-react";
 import Logo from "../Logo";
+import { t } from "@/lib/utils/i18n";
 
 interface InfoPageViewProps {
   onOpenSettings: () => void;
@@ -18,7 +19,6 @@ export function InfoPageView({ onOpenSettings }: InfoPageViewProps) {
             size="icon"
             onClick={onOpenSettings}
             className="hover:bg-white/50"
-            title="Go to Settings"
           >
             <Settings size={18} />
           </Button>
@@ -31,13 +31,13 @@ export function InfoPageView({ onOpenSettings }: InfoPageViewProps) {
             <Info size={20} className="text-blue-600" />
           </div>
           <div>
-            <p className="font-medium">About This Extension</p>
-            <p className="text-sm text-muted-foreground">Learn & configure</p>
+            <p className="font-medium">{t("infoPageView_title")}</p>
+            <p className="text-sm text-muted-foreground">{t("infoPageView_subtitle")}</p>
           </div>
         </div>
 
         <p className="text-sm text-foreground/70 mb-5">
-          Distraction Limiter helps you stay focused by limiting time on distracting sites. Privacy-first, free, and open-source.
+          {t("infoPageView_description")}
         </p>
 
         <div className="space-y-2">
@@ -46,7 +46,7 @@ export function InfoPageView({ onOpenSettings }: InfoPageViewProps) {
             className="w-full rounded-full bg-primary hover:bg-primary/90 gap-2"
           >
             <Settings size={16} />
-            Go to Settings
+            {t("infoPageView_button")}
           </Button>
         </div>
       </CardContent>

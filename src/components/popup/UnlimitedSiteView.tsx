@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Settings, Plus, Globe, Loader2, Info } from "lucide-react";
+import { t } from "@/lib/utils/i18n";
 import { UIGroup } from "@/lib/storage";
 import Logo from "../Logo";
 
@@ -51,7 +52,7 @@ export function UnlimitedSiteView({
                 size="icon"
                 onClick={onInfo}
                 className="hover:bg-white/50"
-                title="About this extension"
+                title={t("normalPageView_button_tooltip")}
               >
                 <Info size={18} />
               </Button>
@@ -75,18 +76,18 @@ export function UnlimitedSiteView({
           </div>
           <div>
             <p className="font-medium text-foreground">{siteName}</p>
-            <p className="text-sm text-muted-foreground">Not tracked</p>
+            <p className="text-sm text-muted-foreground">{t("unlimitedSiteView_notTracked")}</p>
           </div>
         </div>
 
         <p className="text-sm text-muted-foreground mb-5">
-          Add limits to stay mindful while browsing this site.
+          {t("unlimitedSiteView_description")}
         </p>
 
         <div className="space-y-4">
           <div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-              Time limit
+              {t("unlimitedSiteView_timeLimit_label")}
             </p>
             <div className="grid grid-cols-3 gap-2">
               {[15, 30, 60].map((minutes) => (
@@ -110,7 +111,7 @@ export function UnlimitedSiteView({
 
           <div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-              Opens limit
+              {t("unlimitedSiteView_opensLimit_label")}
             </p>
             <div className="grid grid-cols-3 gap-2">
               {[5, 10, 20].map((opens) => (
@@ -139,14 +140,14 @@ export function UnlimitedSiteView({
             disabled={isSaving || (!selectedTimeLimit && !selectedOpensLimit)}
           >
             <Plus size={14} className="mr-1.5" />
-            Add limit
+            {t("unlimitedSiteView_button_addLimit")}
           </Button>
 
           <div className="relative py-2">
             <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
             <div className="relative flex justify-center">
               <span className="px-2 bg-card text-xs text-muted-foreground">
-                or
+                {t("unlimitedSiteView_divider")}
               </span>
             </div>
           </div>
@@ -154,7 +155,7 @@ export function UnlimitedSiteView({
           {showGroupSelector ? (
             <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Select a group
+                {t("unlimitedSiteView_groupSelector_label")}
               </p>
               {isLoadingGroups ? (
                 <div className="flex items-center justify-center p-4">
@@ -180,7 +181,7 @@ export function UnlimitedSiteView({
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No groups available. Create one in settings.
+                  {t("unlimitedSiteView_groupSelector_empty")}
                 </p>
               )}
               <Button
@@ -190,7 +191,7 @@ export function UnlimitedSiteView({
                 onClick={onCloseGroupSelector}
                 disabled={isSaving}
               >
-                Cancel
+                {t("unlimitedSiteView_button_cancel")}
               </Button>
             </div>
           ) : (
@@ -202,7 +203,7 @@ export function UnlimitedSiteView({
               disabled={isSaving}
             >
               <Plus size={14} className="mr-1.5" />
-              Add to group
+              {t("unlimitedSiteView_button_addToGroup")}
             </Button>
           )}
         </div>

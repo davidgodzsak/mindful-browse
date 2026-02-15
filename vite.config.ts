@@ -22,7 +22,7 @@ function copyDirRecursive(src: string, dest: string) {
   });
 }
 
-// Plugin to copy background scripts, locales, and manifest to dist
+// Plugin to copy background scripts, locales, icons, and manifest to dist
 function copyExtensionFilesPlugin(): Plugin {
   return {
     name: 'copy-extension-files',
@@ -57,6 +57,18 @@ function copyExtensionFilesPlugin(): Plugin {
         const stat = statSync(localesDir);
         if (stat.isDirectory()) {
           copyDirRecursive(localesDir, distLocalesDir);
+        }
+      } catch {
+        // Directory doesn't exist yet, skip
+      }
+
+      // Copy icons directory to assets/icons
+      const iconsDir = resolve(srcDir, 'icons');
+      const distIconsDir = resolve(distDir, 'assets', 'icons');
+      try {
+        const stat = statSync(iconsDir);
+        if (stat.isDirectory()) {
+          copyDirRecursive(iconsDir, distIconsDir);
         }
       } catch {
         // Directory doesn't exist yet, skip

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Clock, Quote, Loader2, FolderOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { t } from "@/lib/utils/i18n";
 import PageTemplate from "./PageTemplate";
 import AddSiteDialog from "./settings/AddSiteDialog";
 import CreateGroupDialog from "./settings/CreateGroupDialog";
@@ -587,7 +588,7 @@ const SettingsPage = () => {
       >
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading settings...</p>
+          <p className="text-muted-foreground">{t("settings_loading")}</p>
         </div>
       </PageTemplate>
     );
@@ -604,7 +605,7 @@ const SettingsPage = () => {
       >
         <Tabs
           defaultValue="limits"
-          className="space-y-6"
+          className="w-full max-w-4xl space-y-6"
           onValueChange={(value) => {
             // Auto-advance when user clicks on specific tabs during onboarding
             if (
@@ -627,7 +628,7 @@ const SettingsPage = () => {
           <TabsList className="grid w-full grid-cols-3 rounded-2xl p-1 bg-muted/80">
             <TabsTrigger value="limits" className="rounded-xl">
               <Clock size={16} className="mr-2" />
-              Limits
+              {t("settings_tab_limits")}
             </TabsTrigger>
             <TabsTrigger
               value="groups"
@@ -635,7 +636,7 @@ const SettingsPage = () => {
               data-testid="groups-tab"
             >
               <FolderOpen size={16} className="mr-2" />
-              Groups
+              {t("settings_tab_groups")}
             </TabsTrigger>
             <TabsTrigger
               value="messages"
@@ -643,7 +644,7 @@ const SettingsPage = () => {
               data-testid="messages-tab"
             >
               <Quote size={16} className="mr-2" />
-              Messages
+              {t("settings_tab_messages")}
             </TabsTrigger>
           </TabsList>
 

@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { t } from "@/lib/utils/i18n";
 
 interface AddSiteToGroupDialogProps {
   open: boolean;
@@ -34,17 +35,17 @@ const AddSiteToGroupDialog = ({ open, onOpenChange, groupName, onAdd }: AddSiteT
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Add Site to {groupName}</DialogTitle>
+          <DialogTitle>{t("dialog_addToGroup_title", groupName)}</DialogTitle>
           <DialogDescription>
-            This site will share the group's time and opens limits.
+            {t("dialog_addToGroup_description")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="site-url">Website URL</Label>
+            <Label htmlFor="site-url">{t("dialog_addToGroup_label_websiteUrl")}</Label>
             <Input
               id="site-url"
-              placeholder="e.g., tiktok.com"
+              placeholder={t("dialog_addToGroup_placeholder_websiteUrl")}
               value={siteName}
               onChange={(e) => setSiteName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
@@ -53,18 +54,23 @@ const AddSiteToGroupDialog = ({ open, onOpenChange, groupName, onAdd }: AddSiteT
           </div>
           {/* Common suggestions */}
           <div className="space-y-2">
-            <Label>Quick add</Label>
+            <Label>{t("dialog_addToGroup_quickAdd_label")}</Label>
             <div className="flex flex-wrap gap-2">
-              {["tiktok.com", "linkedin.com", "pinterest.com", "snapchat.com"].map((site) => (
+              {[
+                { key: "tiktok", value: "dialog_addToGroup_quickAdd_tiktok" },
+                { key: "linkedin", value: "dialog_addToGroup_quickAdd_linkedin" },
+                { key: "pinterest", value: "dialog_addToGroup_quickAdd_pinterest" },
+                { key: "snapchat", value: "dialog_addToGroup_quickAdd_snapchat" },
+              ].map((site) => (
                 <Button
-                  key={site}
+                  key={site.key}
                   type="button"
                   variant="outline"
                   size="sm"
                   className="rounded-full text-xs"
-                  onClick={() => setSiteName(site)}
+                  onClick={() => setSiteName(t(site.value))}
                 >
-                  {site}
+                  {t(site.value)}
                 </Button>
               ))}
             </div>
@@ -72,11 +78,11 @@ const AddSiteToGroupDialog = ({ open, onOpenChange, groupName, onAdd }: AddSiteT
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
-            Cancel
+            {t("dialog_addToGroup_button_cancel")}
           </Button>
           <Button onClick={handleAdd} disabled={!siteName.trim()} className="rounded-xl">
             <Plus size={16} className="mr-2" />
-            Add to Group
+            {t("dialog_addToGroup_button_add")}
           </Button>
         </DialogFooter>
       </DialogContent>

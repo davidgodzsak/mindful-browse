@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { t } from "@/lib/utils/i18n";
 import PageTemplate from "./PageTemplate";
 import { getVersionFromManifest } from "@/lib/utils/manifestVersion";
 
@@ -28,54 +29,54 @@ const InfoPage = () => {
   const values = [
     {
       icon: Clock,
-      title: "Save Time",
-      description: "Stay aware of how you spend your online time and reclaim your focus",
+      title: t("info_value_saveTime_title"),
+      description: t("info_value_saveTime_description"),
       color: "bg-blue-100 text-blue-600",
     },
     {
       icon: Leaf,
-      title: "Be Mindful",
-      description: "Build healthier browsing habits with gentle, non-judgmental limits",
+      title: t("info_value_mindful_title"),
+      description: t("info_value_mindful_description"),
       color: "bg-emerald-100 text-emerald-600",
     },
     {
       icon: Lock,
-      title: "Privacy First",
-      description: "Everything stays on your device. No tracking, no data collection, no servers",
+      title: t("info_value_privacy_title"),
+      description: t("info_value_privacy_description"),
       color: "bg-purple-100 text-purple-600",
     },
     {
       icon: Heart,
-      title: "Free Forever",
-      description: "No ads, no paywalls. We believe in making the internet healthier for everyone",
+      title: t("info_value_free_title"),
+      description: t("info_value_free_description"),
       color: "bg-pink-100 text-pink-600",
     },
   ];
 
   const donations = [
     {
-      name: "Stripe",
+      name: t("info_donation_stripe"),
       icon: "$",
       link: "https://donate.stripe.com/",
-      description: "One-time or recurring donations",
+      description: t("info_donation_stripe_description"),
     },
     {
-      name: "PayPal",
+      name: t("info_donation_paypal"),
       icon: "P",
       link: "https://paypal.me/",
-      description: "Fast and secure",
+      description: t("info_donation_paypal_description"),
     },
     {
-      name: "Buy Me a Coffee",
+      name: t("info_donation_buymeacoffee"),
       icon: "☕",
       link: "https://buymeacoffee.com/",
-      description: "Support our work",
+      description: t("info_donation_buymeacoffee_description"),
     },
     {
-      name: "Patreon",
+      name: t("info_donation_patreon"),
       icon: "P",
       link: "https://patreon.com/",
-      description: "Become a patron",
+      description: t("info_donation_patreon_description"),
     },
   ];
 
@@ -99,19 +100,17 @@ const InfoPage = () => {
       {/* Intro section */}
       <div className="max-w-2xl w-full text-center mb-16">
         <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-          Reclaim Your Focus
+          {t("info_title")}
         </h2>
         <p className="text-lg text-foreground/80 leading-relaxed">
-          A simple, privacy-first browser extension that helps you build healthier browsing habits.
-          Set limits on the sites that distract you, get gentle reminders when you need a break,
-          and stay mindful about how you spend your online time.
+          {t("info_description")}
         </p>
       </div>
 
       {/* Values grid */}
       <div className="max-w-4xl w-full mb-16">
         <h3 className="text-2xl font-semibold text-foreground text-center mb-8">
-          What You Get
+          {t("info_values_title")}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {values.map((value) => {
@@ -144,10 +143,10 @@ const InfoPage = () => {
       <div className="max-w-2xl w-full mb-12">
         <div className="text-center">
           <h3 className="text-2xl font-semibold text-foreground mb-3">
-            Ready to Get Started?
+            {t("info_setup_title")}
           </h3>
           <p className="text-sm text-foreground/70 mb-6">
-            Open settings to add your first site limits and customize your experience to match your goals.
+            {t("info_setup_description")}
           </p>
           <Button
             onClick={handleOpenSettings}
@@ -155,7 +154,7 @@ const InfoPage = () => {
             className="rounded-full bg-primary hover:bg-primary/90 gap-2 px-8 py-6 text-base"
           >
             <Settings size={20} />
-            Go to Settings
+            {t("info_setup_button")}
           </Button>
         </div>
       </div>
@@ -164,11 +163,10 @@ const InfoPage = () => {
       <div className="max-w-2xl w-full mb-16">
         <div className="text-center mb-8">
           <h3 className="text-2xl font-semibold text-foreground mb-2">
-            Support This Project
+            {t("info_donation_title")}
           </h3>
           <p className="text-foreground/70">
-            If you find this extension helpful, please consider supporting its development.
-            Your donation helps us keep it free, ad-free, and open-source for everyone.
+            {t("info_donation_description")}
           </p>
         </div>
 
@@ -193,7 +191,7 @@ const InfoPage = () => {
                     {donation.description}
                   </p>
                   <div className="flex items-center gap-2 text-primary text-sm font-medium">
-                    Visit <ExternalLink size={14} />
+                    {t("info_donation_link")} <ExternalLink size={14} />
                   </div>
                 </CardContent>
               </Card>
@@ -206,10 +204,10 @@ const InfoPage = () => {
       <div className="max-w-2xl w-full">
         <div className="text-center mb-8">
           <h3 className="text-2xl font-semibold text-foreground mb-2">
-            Have Feedback?
+            {t("info_feedback_title")}
           </h3>
           <p className="text-foreground/70 mb-6">
-            Found a bug or have a feature request? We'd love to hear from you!
+            {t("info_feedback_description")}
           </p>
         </div>
 
@@ -224,7 +222,7 @@ const InfoPage = () => {
               className="w-full sm:w-auto rounded-full gap-2 border-foreground/20 hover:bg-white/50"
             >
               <Bug size={18} />
-              Report an Issue
+              {t("info_feedback_reportIssue")}
             </Button>
           </a>
           <a
@@ -237,7 +235,7 @@ const InfoPage = () => {
               className="w-full sm:w-auto rounded-full gap-2 border-foreground/20 hover:bg-white/50"
             >
               <MessageCircle size={18} />
-              Feature Request
+              {t("info_feedback_featureRequest")}
             </Button>
           </a>
         </div>
@@ -246,7 +244,7 @@ const InfoPage = () => {
       {/* Footer */}
       <div className="text-center py-6 border-t border-white/20 text-sm text-foreground/60">
         <p>
-          Made with <span className="text-red-500">❤️</span> to help you stay focused
+          {t("info_footer")}
         </p>
       </div>
     </PageTemplate>

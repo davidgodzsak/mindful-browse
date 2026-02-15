@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { t } from "@/lib/utils/i18n";
 import type { UISite, UIGroup } from "@/lib/storage";
 
 type Site = UISite;
@@ -63,7 +64,7 @@ export function IndividualSitesTab({
           className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
         />
         <Input
-          placeholder="Search sites and groups..."
+          placeholder={t("sites_search_placeholder")}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-11 rounded-xl border-0 bg-card shadow-soft"
@@ -75,7 +76,7 @@ export function IndividualSitesTab({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CardTitle className="text-lg">Individual Sites</CardTitle>
+              <CardTitle className="text-lg">{t("sites_section_title")}</CardTitle>
               <Badge variant="secondary" className="rounded-full">
                 {individualSites.length}
               </Badge>
@@ -88,7 +89,7 @@ export function IndividualSitesTab({
               data-testid="add-site-button"
             >
               <Plus size={16} className="mr-2" />
-              Add site
+              {t("sites_button_add")}
             </Button>
           </div>
         </CardHeader>
@@ -122,7 +123,7 @@ export function IndividualSitesTab({
                   onToggleSiteEnabled(site.id, site.isEnabled !== false)
                 }
                 disabled={isSaving}
-                title={site.isEnabled !== false ? "Enabled" : "Disabled"}
+                title={site.isEnabled !== false ? t("sites_button_enabled") : t("sites_button_disabled")}
               />
               <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
                 <Button
@@ -154,7 +155,7 @@ export function IndividualSitesTab({
         <Card className="shadow-soft border-0">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              Groups
+              {t("sites_groups_section_title")}
               <Badge variant="secondary" className="rounded-full">
                 {groups.length}
               </Badge>
@@ -190,7 +191,7 @@ export function IndividualSitesTab({
                       </Badge>
                     )}
                     <Badge variant="secondary" className="rounded-full">
-                      {(group.sites || []).length} sites
+                      {t("sites_groups_badge", String((group.sites || []).length))}
                     </Badge>
                     {group.expanded ? (
                       <ChevronDown size={18} />
@@ -254,7 +255,7 @@ export function IndividualSitesTab({
                       disabled={isSaving}
                     >
                       <Plus size={14} className="mr-2" />
-                      Add site to group
+                      {t("sites_groups_addSite_button")}
                     </Button>
                   </div>
                 )}

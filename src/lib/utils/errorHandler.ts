@@ -1,6 +1,7 @@
 /**
  * Error handling utilities for consistent error management across components
  */
+import { t } from "./i18n";
 
 /**
  * Extracts error message from various error types
@@ -13,7 +14,7 @@ export function getErrorMessage(error: unknown): string {
   if (typeof error === "string") {
     return error;
   }
-  return "An unexpected error occurred";
+  return t("error_unexpected");
 }
 
 /**

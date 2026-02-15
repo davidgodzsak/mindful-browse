@@ -6,6 +6,7 @@ import {
   Brain,
   Coffee,
 } from 'lucide-react';
+import { t } from '@/lib/utils/i18n';
 
 export interface Suggestion {
   icon: typeof BookOpen;
@@ -14,41 +15,46 @@ export interface Suggestion {
   color: string;
 }
 
-export const ACTIVITY_SUGGESTIONS: Suggestion[] = [
-  {
-    icon: BookOpen,
-    title: 'Read a book',
-    description: 'Dive into that novel you\'ve been meaning to start',
-    color: 'bg-amber-100 text-amber-600',
-  },
-  {
-    icon: Droplets,
-    title: 'Drink water',
-    description: 'Stay hydrated! Your body will thank you',
-    color: 'bg-blue-100 text-blue-600',
-  },
-  {
-    icon: TreePine,
-    title: 'Take a walk',
-    description: 'Get some fresh air and clear your mind',
-    color: 'bg-emerald-100 text-emerald-600',
-  },
-  {
-    icon: Phone,
-    title: 'Call someone',
-    description: 'Connect with a friend or family member',
-    color: 'bg-purple-100 text-purple-600',
-  },
-  {
-    icon: Brain,
-    title: 'Meditate',
-    description: '5 minutes of mindfulness can reset your focus',
-    color: 'bg-pink-100 text-pink-600',
-  },
-  {
-    icon: Coffee,
-    title: 'Take a break',
-    description: 'Stretch, make tea, and rest your eyes',
-    color: 'bg-orange-100 text-orange-600',
-  },
-];
+export function getActivitySuggestions(): Suggestion[] {
+  return [
+    {
+      icon: BookOpen,
+      title: t('suggestion_readBook_title'),
+      description: t('suggestion_readBook_description'),
+      color: 'bg-amber-100 text-amber-600',
+    },
+    {
+      icon: Droplets,
+      title: t('suggestion_drinkWater_title'),
+      description: t('suggestion_drinkWater_description'),
+      color: 'bg-blue-100 text-blue-600',
+    },
+    {
+      icon: TreePine,
+      title: t('suggestion_takeWalk_title'),
+      description: t('suggestion_takeWalk_description'),
+      color: 'bg-emerald-100 text-emerald-600',
+    },
+    {
+      icon: Phone,
+      title: t('suggestion_callSomeone_title'),
+      description: t('suggestion_callSomeone_description'),
+      color: 'bg-purple-100 text-purple-600',
+    },
+    {
+      icon: Brain,
+      title: t('suggestion_meditate_title'),
+      description: t('suggestion_meditate_description'),
+      color: 'bg-pink-100 text-pink-600',
+    },
+    {
+      icon: Coffee,
+      title: t('suggestion_takeBreak_title'),
+      description: t('suggestion_takeBreak_description'),
+      color: 'bg-orange-100 text-orange-600',
+    },
+  ];
+}
+
+// Keep ACTIVITY_SUGGESTIONS for backward compatibility
+export const ACTIVITY_SUGGESTIONS: Suggestion[] = getActivitySuggestions();

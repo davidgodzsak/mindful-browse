@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { t } from "@/lib/utils/i18n";
 
 interface CreateGroupDialogProps {
   open: boolean;
@@ -63,7 +64,7 @@ const CreateGroupDialog = ({ open, onOpenChange, onCreate, initialGroup, isEditi
 
     // Ensure at least one limit is set
     if (!parsedTimeLimit && !parsedOpensLimit) {
-      alert("Please set at least a time limit or an opens limit");
+      alert(t("dialog_createGroup_validation"));
       return;
     }
 
@@ -87,17 +88,17 @@ const CreateGroupDialog = ({ open, onOpenChange, onCreate, initialGroup, isEditi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Group" : "Create New Group"}</DialogTitle>
+          <DialogTitle>{isEditing ? t("dialog_createGroup_title_edit") : t("dialog_createGroup_title_create")}</DialogTitle>
           <DialogDescription>
-            {isEditing ? "Update the group settings." : "Create a group to share limits across multiple sites."}
+            {isEditing ? t("dialog_createGroup_description_edit") : t("dialog_createGroup_description_create")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="group-name">Group Name</Label>
+            <Label htmlFor="group-name">{t("dialog_createGroup_label_groupName")}</Label>
             <Input
               id="group-name"
-              placeholder="e.g., Social Media"
+              placeholder={t("dialog_createGroup_placeholder_groupName")}
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               className="rounded-xl"
@@ -106,7 +107,7 @@ const CreateGroupDialog = ({ open, onOpenChange, onCreate, initialGroup, isEditi
           
           {/* Color picker */}
           <div className="space-y-2">
-            <Label>Color</Label>
+            <Label>{t("dialog_createGroup_label_color")}</Label>
             <div className="flex gap-2">
               {colorOptions.map((color) => (
                 <button
@@ -128,7 +129,7 @@ const CreateGroupDialog = ({ open, onOpenChange, onCreate, initialGroup, isEditi
             <div className="space-y-2">
               <Label htmlFor="group-time-limit" className="flex items-center gap-2">
                 <Clock size={14} />
-                Time limit (min)
+                {t("dialog_createGroup_label_timeLimit")}
               </Label>
               <Input
                 id="group-time-limit"
@@ -141,7 +142,7 @@ const CreateGroupDialog = ({ open, onOpenChange, onCreate, initialGroup, isEditi
             <div className="space-y-2">
               <Label htmlFor="group-opens-limit" className="flex items-center gap-2">
                 <MousePointerClick size={14} />
-                Opens limit
+                {t("dialog_createGroup_label_opensLimit")}
               </Label>
               <Input
                 id="group-opens-limit"
@@ -155,7 +156,7 @@ const CreateGroupDialog = ({ open, onOpenChange, onCreate, initialGroup, isEditi
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
-            Cancel
+            {t("dialog_createGroup_button_cancel")}
           </Button>
           <Button
             onClick={handleCreate}
@@ -163,11 +164,11 @@ const CreateGroupDialog = ({ open, onOpenChange, onCreate, initialGroup, isEditi
             className="rounded-xl"
           >
             {isEditing ? (
-              <>Update Group</>
+              <>{t("dialog_createGroup_button_update")}</>
             ) : (
               <>
                 <Plus size={16} className="mr-2" />
-                Create Group
+                {t("dialog_createGroup_button_create")}
               </>
             )}
           </Button>

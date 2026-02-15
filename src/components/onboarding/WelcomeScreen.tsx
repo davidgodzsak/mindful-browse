@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { t } from "@/lib/utils/i18n";
 
 interface WelcomeScreenProps {
   onStart: () => void;
@@ -18,9 +19,9 @@ export function WelcomeScreen({ onStart, onSkip }: WelcomeScreenProps) {
     <Dialog open={true}>
       <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader className="text-center">
-          <DialogTitle className="text-2xl">Welcome to Mindful Browse ✨</DialogTitle>
+          <DialogTitle className="text-2xl">{t("onboarding_welcome_title")}</DialogTitle>
           <DialogDescription className="text-base">
-            Set up your first page limits and stay focused
+            {t("onboarding_welcome_subtitle")}
           </DialogDescription>
         </DialogHeader>
 
@@ -33,9 +34,9 @@ export function WelcomeScreen({ onStart, onSkip }: WelcomeScreenProps) {
                 size={18}
               />
               <div>
-                <p className="font-semibold text-sm">Add Page Limits</p>
+                <p className="font-semibold text-sm">{t("onboarding_welcome_feature1_title")}</p>
                 <p className="text-xs text-muted-foreground">
-                  Set time and visit limits on distracting sites
+                  {t("onboarding_welcome_feature1_description")}
                 </p>
               </div>
             </div>
@@ -43,9 +44,9 @@ export function WelcomeScreen({ onStart, onSkip }: WelcomeScreenProps) {
             <div className="flex items-start gap-3">
               <FolderOpen className="text-emerald-600 flex-shrink-0 mt-0.5" size={18} />
               <div>
-                <p className="font-semibold text-sm">Limit a group of pages</p>
+                <p className="font-semibold text-sm">{t("onboarding_welcome_feature2_title")}</p>
                 <p className="text-xs text-muted-foreground">
-                  Limit related sites together to prevent switching
+                  {t("onboarding_welcome_feature2_description")}
                 </p>
               </div>
             </div>
@@ -56,16 +57,16 @@ export function WelcomeScreen({ onStart, onSkip }: WelcomeScreenProps) {
                 size={18}
               />
               <div>
-                <p className="font-semibold text-sm">Custom Messages</p>
+                <p className="font-semibold text-sm">{t("onboarding_welcome_feature3_title")}</p>
                 <p className="text-xs text-muted-foreground">
-                  Add motivational messages for timeout pages
+                  {t("onboarding_welcome_feature3_description")}
                 </p>
               </div>
             </div>
           </div>
 
           <p className="text-xs text-center text-muted-foreground">
-            ⏱️ Takes about 2 minutes
+            {t("onboarding_welcome_duration")}
           </p>
         </div>
 
@@ -76,14 +77,14 @@ export function WelcomeScreen({ onStart, onSkip }: WelcomeScreenProps) {
             onClick={onSkip}
             className="flex-1 rounded-lg"
           >
-            Skip onboarding
+            {t("onboarding_welcome_button_skip")}
           </Button>
           <Button
             onClick={onStart}
             autoFocus
             className="flex-1 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
           >
-            Start onboarding
+            {t("onboarding_welcome_button_start")}
           </Button>
         </div>
       </DialogContent>

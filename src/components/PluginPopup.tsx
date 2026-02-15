@@ -7,6 +7,7 @@ import { UIGroup } from "@/lib/storage";
 import { useBroadcastUpdates } from "@/hooks/useBroadcastUpdates";
 import { useToggleSelection } from "@/lib/hooks/useToggleSelection";
 import { getErrorMessage, logError, getErrorToastProps, getSuccessToastProps } from "@/lib/utils/errorHandler";
+import { t } from "@/lib/utils/i18n";
 import { NormalPageView } from "./popup/NormalPageView";
 import { UnlimitedSiteView } from "./popup/UnlimitedSiteView";
 import { DisabledStateView } from "./popup/DisabledStateView";
@@ -154,7 +155,7 @@ const PluginPopup = () => {
         }
       } catch (error) {
         logError("Error loading page info", error);
-        toast(getErrorToastProps("Failed to load page information"));
+        toast(getErrorToastProps(t("popup_pageInfo_error")));
       } finally {
         setIsLoading(false);
       }
@@ -253,7 +254,7 @@ const PluginPopup = () => {
 
   const handleAddLimit = async () => {
     if (!selectedTimeLimit && !selectedOpensLimit) {
-      toast(getErrorToastProps("Please select at least one limit type"));
+      toast(getErrorToastProps(t("popup_addLimit_validation")));
       return;
     }
 
@@ -266,7 +267,7 @@ const PluginPopup = () => {
         opensLimit: selectedOpensLimit ?? undefined,
       });
 
-      toast(getSuccessToastProps(`Limit added for ${siteName}`));
+      toast(getSuccessToastProps(t("popup_addLimit_success", siteName)));
 
       // Reset selection
       resetTimeLimitSelection();
@@ -286,7 +287,7 @@ const PluginPopup = () => {
       }
     } catch (error) {
       logError("Error adding limit", error);
-      toast(getErrorToastProps("Failed to add limit. Please try again."));
+      toast(getErrorToastProps(t("popup_addLimit_failed")));
     } finally {
       setIsSaving(false);
     }
@@ -326,10 +327,7 @@ const PluginPopup = () => {
       setDisabledReason(null);
       setIsLimited(true);
 
-      toast({
-        title: "Success",
-        description: "Tracking enabled",
-      });
+      toast(getSuccessToastProps(t("popup_trackingEnabled_description"), t("popup_trackingEnabled_title")));
 
       // Refresh page info to show tracking details
       const pageInfo = await api.getCurrentPageInfo();
@@ -349,7 +347,7 @@ const PluginPopup = () => {
       }
     } catch (error) {
       logError("Error enabling tracking", error);
-      toast(getErrorToastProps("Failed to enable tracking"));
+      toast(getErrorToastProps(t("popup_trackingEnabled_failed")));
     } finally {
       setIsSaving(false);
     }
@@ -363,7 +361,7 @@ const PluginPopup = () => {
       setShowGroupSelector(true);
     } catch (error) {
       logError("Error loading groups", error);
-      toast(getErrorToastProps("Failed to load groups. Please try again."));
+      toast(getErrorToastProps(t("popup_groupSelector_error")));
     } finally {
       setIsLoadingGroups(false);
     }
@@ -382,7 +380,7 @@ const PluginPopup = () => {
       // Add site to group
       await api.addSiteToGroup(groupId, siteToAddId);
 
-      toast(getSuccessToastProps("Site added to group successfully"));
+      toast(getSuccessToastProps(t("popup_addToGroup_success")));
 
       // Refresh page info
       const pageInfo = await api.getCurrentPageInfo();
@@ -405,7 +403,7 @@ const PluginPopup = () => {
       resetOpensLimitSelection();
     } catch (error) {
       logError("Error adding site to group", error);
-      toast(getErrorToastProps("Failed to add site to group. Please try again."));
+      toast(getErrorToastProps(t("popup_addToGroup_failed")));
     } finally {
       setIsSaving(false);
     }
@@ -419,7 +417,7 @@ const PluginPopup = () => {
 
       await api.extendLimit(siteId, minutes, opens, excuse);
 
-      toast(getSuccessToastProps("Limit extended! Redirecting..."));
+      toast(getSuccessToastProps(t("notification_extendSuccess")));
 
       // Navigate back to original site if we have the URL
       if (blockedUrl) {
@@ -454,7 +452,7 @@ const PluginPopup = () => {
         <CardContent className="p-5 flex items-center justify-center min-h-64">
           <div className="flex flex-col items-center gap-2">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Loading...</p>
+            <p className="text-sm text-muted-foreground">{t("popup_loading_message")}</p>
           </div>
         </CardContent>
       </Card>

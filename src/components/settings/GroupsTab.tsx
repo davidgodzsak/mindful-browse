@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { t } from "@/lib/utils/i18n";
 import type { UISite, UIGroup } from "@/lib/storage";
 
 type Site = UISite;
@@ -37,9 +38,9 @@ export function GroupsTab({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold">Manage Groups</h2>
+          <h2 className="text-xl font-semibold">{t("groups_section_title")}</h2>
           <p className="text-muted-foreground">
-            Limit related sites together to prevent switching to alternatives
+            {t("groups_section_description")}
           </p>
         </div>
         <Button
@@ -48,7 +49,7 @@ export function GroupsTab({
           disabled={isSaving}
         >
           <Plus size={18} className="mr-2" />
-          New group
+          {t("groups_button_new")}
         </Button>
       </div>
 
@@ -65,7 +66,7 @@ export function GroupsTab({
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg">{group.name}</h3>
                   <p className="text-sm text-muted-foreground mb-3">
-                    {(group.sites || []).length} sites sharing limits
+                    {t("groups_sites_count", String((group.sites || []).length))}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {(group.sites || []).map((site) => (
@@ -96,7 +97,7 @@ export function GroupsTab({
                       data-testid={group.name === "Social Media" ? "social-media-add-site" : undefined}
                     >
                       <Plus size={12} className="mr-1" />
-                      Add
+                      {t("groups_badge_add")}
                     </Button>
                   </div>
                 </div>
@@ -105,7 +106,7 @@ export function GroupsTab({
                     <div className="flex items-center gap-2 text-sm justify-end">
                       <Clock size={14} className="text-muted-foreground" />
                       <span className="font-medium">
-                        {group.timeLimit} min/day
+                        {t("groups_timeLimit_label", String(group.timeLimit))}
                       </span>
                     </div>
                   )}
@@ -116,7 +117,7 @@ export function GroupsTab({
                         className="text-muted-foreground"
                       />
                       <span className="font-medium">
-                        {group.opensLimit} opens/day
+                        {t("groups_opensLimit_label", String(group.opensLimit))}
                       </span>
                     </div>
                   )}
@@ -128,7 +129,7 @@ export function GroupsTab({
                     className="h-8 w-8 text-muted-foreground hover:text-foreground"
                     onClick={() => onEditGroup(group)}
                     disabled={isSaving}
-                    title="Edit group"
+                    title={t("groups_button_edit_title")}
                   >
                     <Edit2 size={16} />
                   </Button>
@@ -138,7 +139,7 @@ export function GroupsTab({
                     className="h-8 w-8 text-destructive hover:bg-destructive/10"
                     onClick={() => onDeleteGroup(group.id)}
                     disabled={isSaving}
-                    title="Delete group"
+                    title={t("groups_button_delete_title")}
                   >
                     <Trash2 size={16} />
                   </Button>

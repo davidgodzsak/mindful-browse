@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Settings, Info } from "lucide-react";
 import Logo from "../Logo";
+import { t } from "@/lib/utils/i18n";
 
 interface SettingsPageViewProps {
   onOpenSettings: () => void;
@@ -44,13 +45,13 @@ export function SettingsPageView({ onOpenSettings, onOpenInfo }: SettingsPageVie
             <Settings size={20} className="text-blue-600" />
           </div>
           <div>
-            <p className="font-medium">Settings Page</p>
-            <p className="text-sm text-muted-foreground">Manage limits</p>
+            <p className="font-medium">{t("settingsPageView_title")}</p>
+            <p className="text-sm text-muted-foreground">{t("settingsPageView_subtitle")}</p>
           </div>
         </div>
 
         <p className="text-sm text-muted-foreground">
-          Configure your limits, groups, and messages here.
+          {t("settingsPageView_description")}
         </p>
       </CardContent>
     </Card>

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Settings, AlertCircle, Loader2, Info } from "lucide-react";
 import Logo from "../Logo";
+import { t } from "@/lib/utils/i18n";
 
 interface TimeoutPageViewProps {
   originalTimeLimit: number;
@@ -40,11 +41,11 @@ export function TimeoutPageView({
 
   const handleExtend = async () => {
     if (excuse.length < 35) {
-      setExtensionError("Excuse must be at least 35 characters");
+      setExtensionError(t("timeoutPageView_extend_error_minChars"));
       return;
     }
     if (extendMinutes <= 0 && extendOpens <= 0) {
-      setExtensionError("Must extend either time or opens");
+      setExtensionError(t("timeoutPageView_extend_error_noExtension"));
       return;
     }
 
@@ -100,16 +101,16 @@ export function TimeoutPageView({
             <AlertCircle size={20} className="text-red-600" />
           </div>
           <div>
-            <p className="font-medium">Timeout Page</p>
+            <p className="font-medium">{t("timeoutPageView_title")}</p>
             <p className="text-sm text-muted-foreground">
-              {showExtendForm || isExtended ? "Extension Mode" : "Limit reached"}
+              {showExtendForm || isExtended ? t("timeoutPageView_subtitle_extended") : t("timeoutPageView_subtitle_normal")}
             </p>
           </div>
         </div>
 
         {!showExtendForm && !isExtended && (
           <p className="text-sm text-muted-foreground mb-4">
-            You've reached a limit. Take a break and come back later.
+            {t("timeoutPageView_message")}
           </p>
         )}
 
@@ -121,28 +122,28 @@ export function TimeoutPageView({
                 className="w-full rounded-xl"
                 onClick={() => setShowExtendForm(true)}
               >
-                Extend Limits
+                {t("timeoutPageView_button_extend")}
               </Button>
             ) : (
               <div className="space-y-3">
-                <p className="text-sm font-medium">Extend your limit</p>
+                <p className="text-sm font-medium">{t("timeoutPageView_extend_title")}</p>
 
                 {(originalTimeLimit > 0 || originalOpensLimit > 0) && (
                   <div className="bg-muted/50 p-3 rounded-lg space-y-2">
                     {originalTimeLimit > 0 && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Time limit:</span>
+                        <span className="text-muted-foreground">{t("timeoutPageView_extend_timeLimit")}</span>
                         <span className="font-medium">
                           {originalTimeLimit}{" "}
                           <span className="text-muted-foreground text-[10px]">
-                            min
+                            {t("timeoutPageView_extend_timeLabel")}
                           </span>
                           {extendMinutes > 0 && (
                             <>
                               {" "}
                               → {newTimeLimit}{" "}
                               <span className="text-muted-foreground text-[10px]">
-                                min
+                                {t("timeoutPageView_extend_timeLabel")}
                               </span>
                             </>
                           )}
@@ -152,19 +153,19 @@ export function TimeoutPageView({
                     {originalOpensLimit > 0 && (
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">
-                          Open limit:
+                          {t("timeoutPageView_extend_opensLimit")}
                         </span>
                         <span className="font-medium">
                           {originalOpensLimit}{" "}
                           <span className="text-muted-foreground text-[10px]">
-                            opens
+                            {t("timeoutPageView_extend_opensLabel")}
                           </span>
                           {extendOpens > 0 && (
                             <>
                               {" "}
                               → {newOpensLimit}{" "}
                               <span className="text-muted-foreground text-[10px]">
-                                opens
+                                {t("timeoutPageView_extend_opensLabel")}
                               </span>
                             </>
                           )}
@@ -176,7 +177,7 @@ export function TimeoutPageView({
 
                 <div>
                   <label className="text-xs text-muted-foreground">
-                    Extra minutes (0-60)
+                    {t("timeoutPageView_extend_minutes_label")}
                   </label>
                   <Input
                     type="number"
@@ -191,7 +192,7 @@ export function TimeoutPageView({
 
                 <div>
                   <label className="text-xs text-muted-foreground">
-                    Extra opens (0-10)
+                    {t("timeoutPageView_extend_opens_label")}
                   </label>
                   <Input
                     type="number"
@@ -206,12 +207,12 @@ export function TimeoutPageView({
 
                 <div>
                   <label className="text-xs text-muted-foreground">
-                    Why do you need more time?
+                    {t("timeoutPageView_extend_excuse_label")}
                   </label>
                   <Textarea
                     value={excuse}
                     onChange={(e) => setExcuse(e.target.value)}
-                    placeholder="Explain why you need to extend this limit..."
+                    placeholder={t("timeoutPageView_extend_excuse_placeholder")}
                     disabled={isExtending}
                     className="min-h-[60px] rounded-xl"
                   />
@@ -222,7 +223,7 @@ export function TimeoutPageView({
                         : "text-muted-foreground"
                     }`}
                   >
-                    {excuse.length}/35 characters
+                    {t("timeoutPageView_extend_excuse_counter", excuse.length.toString())}
                   </p>
                 </div>
 
@@ -240,7 +241,7 @@ export function TimeoutPageView({
                     disabled={isExtending}
                     className="flex-1 rounded-xl"
                   >
-                    Cancel
+                    {t("timeoutPageView_extend_button_cancel")}
                   </Button>
                   <Button
                     onClick={handleExtend}
@@ -254,10 +255,10 @@ export function TimeoutPageView({
                     {isExtending ? (
                       <>
                         <Loader2 size={14} className="mr-1 animate-spin" />
-                        Extending...
+                        {t("timeoutPageView_extend_button_extending")}
                       </>
                     ) : (
-                      "Extend"
+                      t("timeoutPageView_extend_button_extend")
                     )}
                   </Button>
                 </div>

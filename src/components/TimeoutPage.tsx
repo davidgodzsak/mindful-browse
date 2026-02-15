@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { t } from "@/lib/utils/i18n";
 import PageTemplate from "./PageTemplate";
 import * as api from "@/lib/api";
 import { ACTIVITY_SUGGESTIONS } from "@/constants/suggestions";
@@ -169,7 +170,7 @@ const TimeoutPage = () => {
                 style={{ transitionDuration: "4s" }}
               >
                 <span className="text-primary-foreground text-[10px] font-medium">
-                  {breatheIn ? "Breathe" : "Out"}
+                  {breatheIn ? t("timeout_breathing_in") : t("timeout_breathing_out")}
                 </span>
               </div>
             </div>
@@ -220,10 +221,10 @@ const TimeoutPage = () => {
             ) : (
               <div className="min-h-[200px] flex flex-col items-center justify-center text-center">
                 <p className="text-lg text-muted-foreground mb-4">
-                  No motivational messages set up yet
+                  {t("timeout_noMessages_title")}
                 </p>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Add messages in the extension settings to see them here
+                  {t("timeout_noMessages_description")}
                 </p>
                 <Button
                   variant="outline"
@@ -234,7 +235,7 @@ const TimeoutPage = () => {
                   }}
                   className="rounded-full"
                 >
-                  Open Settings
+                  {t("timeout_noMessages_button")}
                 </Button>
               </div>
             )}
@@ -245,7 +246,7 @@ const TimeoutPage = () => {
         {showActivitySuggestions && (
           <div className="w-full max-w-3xl mb-12">
           <p className="text-center text-muted-foreground mb-4 font-medium">
-            What you could do instead...
+            {t("timeout_suggestions_label")}
           </p>
           <div className="flex items-center gap-4">
             <Button
@@ -297,7 +298,7 @@ const TimeoutPage = () => {
             {blockingReason}
           </p>
           <p className="text-xs">
-            {siteName} • Resets at {resetTime}
+            {t("timeout_resetTime", [siteName, resetTime])}
           </p>
       </div>
     </PageTemplate>

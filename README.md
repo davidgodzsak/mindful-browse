@@ -1,6 +1,6 @@
 #  Mindful Browse
 
-A modern Firebrowserfox extension that helps you stay focused by limiting time spent on distracting websites.
+A modern browser extension that helps you stay focused by limiting time spent on distracting websites.
 
 ## Features
 

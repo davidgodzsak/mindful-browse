@@ -57,7 +57,7 @@ const InfoPage = () => {
     {
       name: t("info_donation_stripe"),
       icon: "$",
-      link: "https://donate.stripe.com/test_dRmdRaflX2AN6Vv9Xh5os00",
+      link: "https://donate.stripe.com/7sYeVdfyC5H49AD02Y9MY00",
       description: t("info_donation_stripe_description"),
     },
     {

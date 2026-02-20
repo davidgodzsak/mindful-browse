@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
-  "version": "1.5.1",
+  "version": "1.6",
   "description": "__MSG_extensionDescription__",
   "author": "Dávid Godzsák",
   "homepage_url": "https://github.com/davidgodzsak/firefox-timelimit-extension",
@@ -22,10 +22,19 @@
     "default_popup": "pages/popup/index.html"
   },
   "background": {
-    "scripts": ["background_scripts/background.js"],
+    "scripts": [
+      "background_scripts/background.js"
+    ],
     "type": "module"
   },
-  "permissions": ["storage", "alarms", "tabs", "webNavigation", "activeTab", "notifications"],
+  "permissions": [
+    "storage",
+    "alarms",
+    "tabs",
+    "webNavigation",
+    "activeTab",
+    "notifications"
+  ],
   "options_ui": {
     "page": "pages/settings/index.html",
     "open_in_tab": true
@@ -37,7 +46,9 @@
         "pages/info/index.html",
         "assets/index.css"
       ],
-      "matches": ["<all_urls>"]
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ],
   "default_locale": "en",
@@ -46,7 +57,9 @@
       "id": "distraction-limiter@davidgodzsak.dev",
       "strict_min_version": "112.0",
       "data_collection_permissions": {
-        "required": ["none"]
+        "required": [
+          "none"
+        ]
       }
     }
   }

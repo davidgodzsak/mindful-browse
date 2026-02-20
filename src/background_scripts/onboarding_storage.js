@@ -3,7 +3,7 @@ const INITIAL_SETUP_KEY = 'initial_setup_done';
 
 async function getOnboardingState() {
   try {
-    const data = await chrome.storage.local.get([ONBOARDING_KEY]);
+    const data = await browser.storage.local.get([ONBOARDING_KEY]);
     return data[ONBOARDING_KEY] || { completed: false };
   } catch (error) {
     console.error('Error getting onboarding state:', error);
@@ -13,7 +13,7 @@ async function getOnboardingState() {
 
 async function completeOnboarding() {
   try {
-    await chrome.storage.local.set({
+    await browser.storage.local.set({
       [ONBOARDING_KEY]: {
         completed: true,
         completedAt: new Date().toISOString(),
@@ -33,7 +33,7 @@ async function hasCompletedOnboarding() {
 
 async function markInitialSetupDone() {
   try {
-    await chrome.storage.local.set({
+    await browser.storage.local.set({
       [INITIAL_SETUP_KEY]: true,
     });
   } catch (error) {
@@ -43,7 +43,7 @@ async function markInitialSetupDone() {
 
 async function hasInitialSetupDone() {
   try {
-    const data = await chrome.storage.local.get([INITIAL_SETUP_KEY]);
+    const data = await browser.storage.local.get([INITIAL_SETUP_KEY]);
     return data[INITIAL_SETUP_KEY] === true;
   } catch (error) {
     return false;

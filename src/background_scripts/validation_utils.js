@@ -1,6 +1,6 @@
 /**
  * @file validation_utils.js
- * @description Centralized validation utilities for the Firefox Distraction Limiter extension.
+ * @description Centralized validation utilities for the browser extension.
  * Provides robust input validation, URL pattern validation, and error categorization
  * to enhance error handling consistency across all modules.
  *

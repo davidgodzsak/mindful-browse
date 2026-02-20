@@ -2,7 +2,7 @@
  * @file usage_recorder.js
  * @description Handles the recording of time spent and open counts for distracting sites.
  * This module is now stateless and event-driven, using browser.storage.local for
- * tracking state with session-like behavior. Compatible with Manifest V3 Firefox.
+ * tracking state with session-like behavior. Compatible with Manifest V3.
  */
 
 import { getUsageStats, updateUsageStats } from './usage_storage.js';

@@ -1,10 +1,10 @@
 # CLAUDE.md - Development Guide for Claude Bots
 
-This file provides guidance to Claude Code when working on this Firefox extension project.
+This file provides guidance to Claude Code when working on this browser extension project.
 
 ## Project Overview
 
-**Distraction Limiter** is a Firefox extension that helps users stay focused by limiting time spent on distracting websites. Users can:
+**Mindful Browse** is a browser extension that helps users stay focused by limiting time spent on distracting websites. Users can:
 - Set daily time limits for specific sites or groups of sites
 - Set open count limits (how many times a site can be visited per day)
 - Receive motivational messages when limits are reached

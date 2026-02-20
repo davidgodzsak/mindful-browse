@@ -1,6 +1,6 @@
-# Distraction Limiter
+#  Mindful Browse
 
-A modern Firefox extension that helps you stay focused by limiting time spent on distracting websites.
+A modern Firebrowserfox extension that helps you stay focused by limiting time spent on distracting websites.
 
 ## Features
 
@@ -103,7 +103,7 @@ For detailed architecture information, see [CLAUDE.md](./CLAUDE.md).
 
 - **Frontend**: React 18, TypeScript, Vite
 - **Styling**: Tailwind CSS, shadcn/ui components
-- **Extension**: Manifest V3 (Firefox WebExtensions API)
+- **Extension**: Manifest V3 (Browser WebExtensions API)
 - **State**: Chrome Storage API
 - **Build**: Vite with TypeScript support
 

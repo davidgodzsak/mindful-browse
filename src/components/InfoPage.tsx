@@ -207,7 +207,7 @@ const InfoPage = () => {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href="https://github.com/davidgodzsak/firefox-timelimit-extension/issues"
+            href="https://github.com/davidgodzsak/mindful-browse/issues"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -220,7 +220,7 @@ const InfoPage = () => {
             </Button>
           </a>
           <a
-            href="https://github.com/davidgodzsak/firefox-timelimit-extension/discussions"
+            href="https://github.com/davidgodzsak/mindful-browse/discussions"
             target="_blank"
             rel="noopener noreferrer"
           >

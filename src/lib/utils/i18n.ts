@@ -7,14 +7,15 @@
  * Get the i18n API object dynamically (checked on each call)
  * This ensures we get the API even if it's loaded after this module
  */
-function getI18nAPI() {
+function getI18nAPI(): { getMessage(key: string, substitutions?: string | string[]): string; getUILanguage(): string } | null {
   // Check for browser object first (Firefox), fallback to chrome (Chrome)
   if (typeof globalThis !== 'undefined') {
-    if ((globalThis as any).browser?.i18n) {
-      return (globalThis as any).browser.i18n;
+    const globalObj = globalThis as Record<string, unknown>;
+    if ((globalObj.browser as Record<string, unknown>)?.i18n) {
+      return (globalObj.browser as Record<string, unknown>).i18n as { getMessage(key: string, substitutions?: string | string[]): string; getUILanguage(): string };
     }
-    if ((globalThis as any).chrome?.i18n) {
-      return (globalThis as any).chrome.i18n;
+    if ((globalObj.chrome as Record<string, unknown>)?.i18n) {
+      return (globalObj.chrome as Record<string, unknown>).i18n as { getMessage(key: string, substitutions?: string | string[]): string; getUILanguage(): string };
     }
   }
   return null;

@@ -9,21 +9,21 @@ import { useEffect, useCallback } from 'react';
 /**
  * Type definition for broadcast event handlers
  */
-export type BroadcastEventHandler = (data: any) => void;
+export type BroadcastEventHandler = (data: unknown) => void;
 
 /**
  * Type definition for all broadcast events
  */
 export interface BroadcastEventMap {
-  siteAdded: { site: any };
-  siteUpdated: { site: any; updates: any };
+  siteAdded: { site: Record<string, unknown> };
+  siteUpdated: { site: Record<string, unknown>; updates: Record<string, unknown> };
   siteDeleted: { siteId: string };
-  groupAdded: { group: any };
-  groupUpdated: { group: any; updates: any };
+  groupAdded: { group: Record<string, unknown> };
+  groupUpdated: { group: Record<string, unknown>; updates: Record<string, unknown> };
   groupDeleted: { groupId: string };
-  siteAddedToGroup: { group: any; siteId: string };
-  siteRemovedFromGroup: { group: any; siteId: string };
-  quickLimitAdded: { site: any };
+  siteAddedToGroup: { group: Record<string, unknown>; siteId: string };
+  siteRemovedFromGroup: { group: Record<string, unknown>; siteId: string };
+  quickLimitAdded: { site: Record<string, unknown> };
 }
 
 /**
@@ -47,13 +47,13 @@ export function useBroadcastUpdates<K extends keyof BroadcastEventMap>(
   handlers: Partial<Record<K, BroadcastEventHandler>>
 ): void {
   const handleMessage = useCallback(
-    (message: any) => {
+    (message: unknown) => {
       // Only process broadcast messages
-      if (message.type !== 'BROADCAST') {
+      if (typeof message !== 'object' || message === null || (message as Record<string, unknown>).type !== 'BROADCAST') {
         return;
       }
 
-      const { event, data } = message;
+      const { event, data } = message as { event: string; data: unknown };
 
       // Call the appropriate handler if it exists
       if (event in handlers && typeof handlers[event as K] === 'function') {

@@ -35,7 +35,7 @@ const SettingsPage = () => {
   // Real data from API
   const [groups, setGroups] = useState<(UIGroup & { sites: UISite[] })[]>([]);
   const [individualSites, setIndividualSites] = useState<UISite[]>([]);
-  const [motivationalMessages, setMotivationalMessages] = useState<any[]>([]);
+  const [motivationalMessages, setMotivationalMessages] = useState<Array<Record<string, unknown>>>([]);
   const [newMessage, setNewMessage] = useState("");
 
   // Loading states
@@ -245,7 +245,7 @@ const SettingsPage = () => {
     }
   };
 
-  const startEditingMessage = (message: any) => {
+  const startEditingMessage = (message: Record<string, unknown>) => {
     messageEditor.startEdit(message);
   };
 

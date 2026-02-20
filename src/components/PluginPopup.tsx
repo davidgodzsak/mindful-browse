@@ -422,8 +422,8 @@ const PluginPopup = () => {
       // Navigate back to original site if we have the URL
       if (blockedUrl) {
         setTimeout(() => {
-          browser.tabs.query({ active: true, currentWindow: true }).then((tabs: any[]) => {
-            if (tabs[0]) {
+          browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+            if (tabs && tabs[0] && tabs[0].id) {
               browser.tabs.update(tabs[0].id, { url: decodeURIComponent(blockedUrl) });
             }
           });

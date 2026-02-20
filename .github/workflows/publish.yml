@@ -80,13 +80,18 @@ jobs:
         with:
           script: |
             const version = '${{ needs.build.outputs.version }}';
+            const buildStatus = '${{ needs.build.result }}';
+            const firefoxStatus = '${{ needs.publish-firefox.result }}';
+            const chromeStatus = '${{ needs.publish-chrome.result }}';
 
-            const message = `🚀 Release v${version} deployment initiated!\n\n` +
+            const statusEmoji = (status) => status === 'success' ? '✅' : status === 'failure' ? '❌' : '⚠️';
+
+            const message = `🚀 Release v${version} deployment completed!\n\n` +
               `**Build Status:**\n` +
-              `✅ Extension built and zipped\n\n` +
+              `${statusEmoji(buildStatus)} Extension built and zipped\n\n` +
               `**Store Submissions:**\n` +
-              `🦊 Firefox: Signing and submitting to AMO\n` +
-              `🎨 Chrome: Uploading to Web Store\n\n` +
+              `${statusEmoji(firefoxStatus)} Firefox: Signing and submitting to AMO\n` +
+              `${statusEmoji(chromeStatus)} Chrome: Uploading to Web Store\n\n` +
               `**Next Steps:**\n` +
               `- Firefox: Review typically takes 2-5 days\n` +
               `- Chrome: Review typically takes 1-3 hours\n\n` +

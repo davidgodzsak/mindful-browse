@@ -55,6 +55,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: extension-build
+
       - name: Publish to Chrome Web Store
         uses: ./.github/actions/publish-to-chrome
         with:

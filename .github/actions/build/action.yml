@@ -82,3 +82,10 @@ runs:
         cd ..
         ls -lh mindful-browse-*.zip
       shell: bash
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: extension-build
+        path: mindful-browse-${{ steps.extract-version.outputs.version }}.zip
+        retention-days: 1

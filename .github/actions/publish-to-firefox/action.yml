@@ -28,7 +28,8 @@ runs:
           --api-key="${{ inputs.firefox-api-key }}" \
           --api-secret="${{ inputs.firefox-api-secret }}" \
           --source-dir=dist \
-          --artifacts-dir=./artifacts
+          --artifacts-dir=./artifacts \
+          --channel=listed
 
         # Find the XPI file
         XPI_FILE=$(find ./artifacts -name "*.xpi" -type f | head -1)
@@ -45,6 +46,6 @@ runs:
     - name: Upload XPI to GitHub release
       if: steps.sign.outputs.xpi-file != 'none'
       run: |
-        gh release upload ${{ github.event.release.tag_name }} ${{ steps.sign.outputs.xpi-file }}
+        GH_TOKEN=${{ github.token }} gh release upload ${{ github.event.release.tag_name }} ${{ steps.sign.outputs.xpi-file }}
       shell: bash
       continue-on-error: true

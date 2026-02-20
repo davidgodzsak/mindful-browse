@@ -57,27 +57,21 @@ const InfoPage = () => {
     {
       name: t("info_donation_stripe"),
       icon: "$",
-      link: "https://donate.stripe.com/",
+      link: "https://donate.stripe.com/test_dRmdRaflX2AN6Vv9Xh5os00",
       description: t("info_donation_stripe_description"),
     },
     {
       name: t("info_donation_paypal"),
       icon: "P",
-      link: "https://paypal.me/",
+      link: "https://paypal.me/davidgodzsak",
       description: t("info_donation_paypal_description"),
     },
     {
       name: t("info_donation_buymeacoffee"),
       icon: "☕",
-      link: "https://buymeacoffee.com/",
+      link: "https://buymeacoffee.com/davidgodzsak",
       description: t("info_donation_buymeacoffee_description"),
-    },
-    {
-      name: t("info_donation_patreon"),
-      icon: "P",
-      link: "https://patreon.com/",
-      description: t("info_donation_patreon_description"),
-    },
+    }
   ];
 
   const handleOpenSettings = () => {
@@ -170,7 +164,7 @@ const InfoPage = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {donations.map((donation) => (
             <a
               key={donation.name}

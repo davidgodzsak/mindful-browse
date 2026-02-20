@@ -1,97 +1,96 @@
-name: Publish Release
+name: Publish New Version
 
 on:
   release:
     types: [published]
 
+permissions:
+  contents: write  # Allow committing manifest.json updates
+  issues: write    # Allow commenting on issues
+
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.build.outputs.version }}
+      zip-file: ${{ steps.build.outputs.zip-file }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
       - name: Build extension
-        run: npm run build
-
-      - name: Get version from manifest
-        id: version
-        run: |
-          VERSION=$(jq -r '.version' src/manifest.json)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Extracted version: $VERSION"
-
-      - name: Create dist zip
-        run: |
-          cd dist
-          zip -r "../focus-flow-${{ steps.version.outputs.version }}.zip" .
-          cd ..
-          ls -lh focus-flow-*.zip
+        id: build
+        uses: ./.github/actions/build
 
       - name: Upload zip to release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: focus-flow-${{ steps.version.outputs.version }}.zip
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish to Firefox Add-ons (AMO)
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npm install -g web-ext
-          web-ext sign \
-            --api-key="${{ secrets.FIREFOX_API_KEY }}" \
-            --api-secret="${{ secrets.FIREFOX_API_SECRET }}" \
-            --source-dir=dist \
-            --artifacts-dir=./artifacts
-        continue-on-error: true
+          gh release upload ${{ github.event.release.tag_name }} ${{ steps.build.outputs.zip-file }}
 
-      - name: Upload Firefox signed XPI to release
-        if: success()
-        uses: softprops/action-gh-release@v1
+  publish-firefox:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Publish to Firefox (sign & upload)
+        uses: ./.github/actions/publish-to-firefox
         with:
-          files: artifacts/*.xpi
+          firefox-api-key: ${{ secrets.FIREFOX_ISSUER }}
+          firefox-api-secret: ${{ secrets.FIREFOX_SECRET }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
+
+  publish-chrome:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Publish to Chrome Web Store
-        run: node .github/scripts/publish-chrome.js
-        env:
-          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
-          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
-          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
-          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
-          EXTENSION_ZIP: focus-flow-${{ steps.version.outputs.version }}.zip
+        uses: ./.github/actions/publish-to-chrome
+        with:
+          chrome-client-id: ${{ secrets.CHROME_CLIENT_ID }}
+          chrome-client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+          chrome-refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          chrome-extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
+          zip-file: ${{ needs.build.outputs.zip-file }}
+          publish: 'true'
         continue-on-error: true
 
+  deploy-status:
+    runs-on: ubuntu-latest
+    needs: [build, publish-firefox, publish-chrome]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Create deployment status
-        if: always()
         uses: actions/github-script@v7
         with:
           script: |
-            const fs = require('fs');
-            const version = require('./src/manifest.json').version;
+            const version = '${{ needs.build.outputs.version }}';
 
-            const message = `🚀 Release v${version} deployment started!\n\n` +
-              `✅ Build: Successful\n` +
-              `📦 Artifacts: focus-flow-${version}.zip\n\n` +
-              `**Store Status:**\n` +
-              `🦊 Firefox: Submitted to AMO (check signing status)\n` +
-              `🎨 Chrome: Uploaded to Web Store (manual review required)\n\n` +
-              `Check the workflow run for detailed logs.`;
+            const message = `🚀 Release v${version} deployment initiated!\n\n` +
+              `**Build Status:**\n` +
+              `✅ Extension built and zipped\n\n` +
+              `**Store Submissions:**\n` +
+              `🦊 Firefox: Signing and submitting to AMO\n` +
+              `🎨 Chrome: Uploading to Web Store\n\n` +
+              `**Next Steps:**\n` +
+              `- Firefox: Review typically takes 2-5 days\n` +
+              `- Chrome: Review typically takes 1-3 hours\n\n` +
+              `Check the [workflow logs](${context.payload.repository.html_url}/actions/runs/${context.runId}) for detailed status.`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -99,5 +98,5 @@ jobs:
               repo: context.repo.repo,
               body: message
             }).catch(() => {
-              // Ignore if no associated issue
+              console.log('No associated issue for comment');
             });

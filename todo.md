@@ -1,4 +1,4 @@
-# TODO
+# Implememtation Todo
 
 ## Bugs
 
@@ -36,6 +36,10 @@
 - [ ] after extending a sites limits, there should be an indication that we are spending extension time, not regular 
 - [ ] Popup extending limits input always contains a 0 that is prefixed to whatever the user inputs. It should be a normal number input field.
 
+### CICD
+- [ ] https://github.com/marketplace/actions/publish-an-extension-on-firefox-addons-store
+- [ ] **Consider renaming Firefox secrets for consistency**: Currently using `FIREFOX_ISSUER` and `FIREFOX_SECRET`. Mozilla docs call them "API Key" and "API Secret". Consider renaming to `FIREFOX_API_KEY` and `FIREFOX_API_SECRET` to match standard naming convention.
+
 
 ## Improvements
 
@@ -43,8 +47,9 @@
 - [x] Popup on the timeout page and settings should show something different, not the regular "not tracked"
 - [x] Be able to extend current limit for a day, but needs an explanation of at least 35 characters this is somewhere not obvious on the timout page and the popup.
 - [x] Clean clutter: Simplify code, create a "mental map document" and check what can be reused across pages, Delete dead code, delete unnecessary logging and error handling, delete mock data
-- [ ] Refactor to actually use locales, remove every hardcoded string in favor of this. 
+- [x] Refactor to actually use locales, remove every hardcoded string in favor of this. 
 - [ ] Be able to limit just a subdomain or a subpage (e.g. shorts.youtube.com or reddit.com/r/hungary or youtube.com/shorts)
+- [ ] Add to every page a link to the plugin page review -> on successful things add a popup to ask the user if they like the user and rate it
 
 ### Settings page
 - [x] be able to turn limits on or off by having a "switch" button next to each page in the limits tab (even on pages individually that are in a group) (reuse the one in the settings -> messages tab -> display options)
@@ -74,3 +79,73 @@
 - [x] Let's bootstrap the app on the first start/install with adding the default messages (so they are not only in the backend code, but added to the storage, and if the user removes the messages they are gone for real -> then the timeout page should say something about setting up messages and linking to the settings page)
 - [x] When opening the settings page for the first time the user should get an onboarding flow. a setp by step process with info poups to go through the onboardin: - first setting up individual pages, then creting a group and then adding pages to groups, lastly about adding messages.
 - [x] When opening the popup for hte first time it should welcome the user and tell them to set up sites, add a button to go to the settings
+- [ ] Detect install -> https://extensionworkshop.com/documentation/develop/onboard-upboard-offboard-users/
+
+
+# Marketing TODO
+
+## 1) Positioning & messaging
+- [x] Decide primary angle: **Mindfulness / Focus / Privacy** (pick one as the hero) -> Can we mix?: Privacy first tool to stop mindless scrolling and replacing it with mindful habits
+- [x] Define target audience (e.g. students, ADHD, developers, general users) -> students, people who work with computers
+- [x] Write core one-sentence value proposition -> Privacy first tool to stop mindless scrolling and replacing it with mindful habits
+
+## 2) Store copy (text assets)
+- [x] Finalize extension title (keyword + brand)
+- [x] Write short description (132 characters, 2 variants for A/B)
+- [x] Write long description with sections:
+  - [x] Emotional hook
+  - [x] Differentiators
+  - [x] Feature bullets
+  - [x] Privacy section
+  - [x] Future roadmap
+  - [x] Call to action
+
+## 3) Visual assets (highest impact)
+- [x] Design icon (simple, symbolic, readable at 16px)
+- [x] Create 5–6 screenshots with captions:
+  - [x] Outcome / timeout screen (first)
+  - [x] Time limits UI
+  - [x] Group limits
+  - [ ] Intentional override (excuse)
+  - [ ] Privacy (local only)
+  - [x] Quick add popup
+- [x] Ensure large readable text on images
+
+## 4) Conversion optimization
+- [ ] Add emotional benefit language to screenshots
+- [ ] Add “Free & private” badge visual
+- [ ] Ensure first screenshot communicates the core value instantly
+
+## 5) Reviews & ranking
+- [ ] Implement in-app review prompt after:
+  - [ ] First limit reached
+  - [ ] 3+ days of usage
+- [ ] Prepare review request copy (non-intrusive)
+
+## 6) Keywords & discoverability
+- [x] Include natural keywords:
+  - website time limit
+  - website blocker
+  - focus
+  - screen time
+  - digital wellbeing
+- [x] Avoid keyword stuffing
+
+## 7) Trust signals
+- [x] Add clear privacy-first section
+- [x] Add “Why free?” line
+- [x] Mention local-only storage
+
+## 8) Future-proofing
+- [x] Add roadmap section (delay screen, stats, localization)
+- [x] Prepare update plan for listing when features ship
+
+## 9) A/B testing plan
+- [x] Variant A: Mindfulness-focused
+- [x] Variant B: Productivity-focused
+- [x] Track install conversion after each update
+
+## 10) Post-launch loop
+- [ ] Monitor install → active user ratio
+- [ ] Read reviews weekly
+- [ ] Update screenshots if a feature changes

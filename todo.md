@@ -38,7 +38,10 @@
 
 ### CICD
 - [ ] https://github.com/marketplace/actions/publish-an-extension-on-firefox-addons-store
-- [ ] **Consider renaming Firefox secrets for consistency**: Currently using `FIREFOX_ISSUER` and `FIREFOX_SECRET`. Mozilla docs call them "API Key" and "API Secret". Consider renaming to `FIREFOX_API_KEY` and `FIREFOX_API_SECRET` to match standard naming convention.
+- [ ] https://github.com/marketplace/actions/publish-chrome-extension-to-chrome-web-store 
+- [ ] https://developer.chrome.com/docs/webstore/using-api#beforeyoubegin
+- **Consider renaming Firefox secrets for consistency**: Currently using `FIREFOX_ISSUER` and `FIREFOX_SECRET`. Mozilla docs call them "API Key" and "API Secret". Consider renaming to `FIREFOX_API_KEY` and `FIREFOX_API_SECRET` to match standard naming convention.
+- [ ]
 
 
 ## Improvements

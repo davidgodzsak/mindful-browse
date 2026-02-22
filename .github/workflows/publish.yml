@@ -6,34 +6,17 @@ on:
 
 permissions:
   contents: write  # Allow committing manifest.json and uploading release assets
-  issues: write    # Allow commenting on issues (for deploy-status if needed)
 
 jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ env.VERSION }}
-      zip-file: mindful-browse-${{ env.VERSION }}.zip
       source-zip-file: mindful-browse-${{ env.VERSION }}-source.zip
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Full history for git operations
-
-      - name: Extract version from release tag
-        run: |
-          TAG="${{ github.event.release.tag_name }}"
-          VERSION="${TAG#v}"
-
-          if [ -z "$VERSION" ]; then
-            echo "❌ Failed to extract version from tag"
-            exit 1
-          fi
-
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "✅ Extracted version: $VERSION"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -49,41 +32,61 @@ jobs:
 
       - name: Update manifest.json with release version
         run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+
+          if [ -z "$VERSION" ]; then
+            echo "❌ Failed to extract version from tag"
+            exit 1
+          fi
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "✅ Extracted version: $VERSION"
+          
           jq --arg version "$VERSION" '.version = $version' src/manifest.json > src/manifest.json.tmp
           mv src/manifest.json.tmp src/manifest.json
           echo "✅ Updated manifest.json to version $VERSION"
+
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet src/manifest.json; then
+            echo "✅ Manifest already at version $VERSION, no commit needed"
+          else
+            git add src/manifest.json
+            git commit -m "chore: update manifest.json to v$VERSION [skip ci]"
+            git push origin HEAD:${{ github.event.release.target_commitish }}
+          fi
 
       - name: Build extension
         run: npm run build
 
       - name: Create extension zip
         run: |
-          zip -r "mindful-browse-$VERSION.zip" dist/
-          ls -lh "mindful-browse-$VERSION.zip"
+          zip -r "mindful-browse-${{ env.VERSION }}.zip" dist/
+          ls -lh "mindful-browse-${{ env.VERSION }}.zip"
 
       - name: Create source zip (for AMO review)
         run: |
-          zip -r "mindful-browse-$VERSION-source.zip" . \
+          zip -r "mindful-browse-${{ env.VERSION }}-source.zip" . \
+            --exclude='claude/*' \
+            --exclude='marketing/*' \
+            --exclude='public/*' \
             --exclude='node_modules/*' \
             --exclude='dist/*' \
             --exclude='.git/*' \
             --exclude='.github/*' \
             --exclude='.gitignore' \
+            --exclude='CLAUDE.md' \
+            --exclude='todo.md' \
             --exclude='*.log'
-          ls -lh "mindful-browse-$VERSION-source.zip"
+          ls -lh "mindful-browse-${{ env.VERSION }}-source.zip"
 
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
           name: extension-dist
           path: dist/
-          retention-days: 1
-
-      - name: Upload zip artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: extension-zip
-          path: mindful-browse-${{ env.VERSION }}.zip
           retention-days: 1
 
       - name: Upload source zip artifact
@@ -93,28 +96,13 @@ jobs:
           path: mindful-browse-${{ env.VERSION }}-source.zip
           retention-days: 1
 
-      - name: Configure git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Commit and push manifest.json update
-        run: |
-          if git diff --quiet src/manifest.json; then
-            echo "✅ Manifest already at version $VERSION, no commit needed"
-          else
-            git add src/manifest.json
-            git commit -m "chore: update manifest.json to v$VERSION [skip ci]"
-            git push origin HEAD:${{ github.event.release.target_commitish }}
-          fi
-
       - name: Upload zips to GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload ${{ github.event.release.tag_name }} \
-            "mindful-browse-$VERSION.zip" \
-            "mindful-browse-$VERSION-source.zip"
+            "mindful-browse-${{ env.VERSION }}.zip" \
+            "mindful-browse-${{ env.VERSION }}-source.zip"
 
   publish-firefox:
     runs-on: ubuntu-latest
@@ -134,11 +122,6 @@ jobs:
           name: extension-source
           path: .
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
       - name: Install web-ext
         run: npm install -g web-ext
 
@@ -146,6 +129,7 @@ jobs:
         run: |
           VERSION="${{ needs.build.outputs.version }}"
           SOURCE_ZIP="mindful-browse-$VERSION-source.zip"
+          RELEASE_NOTES="${{ github.event.release.body }}"
 
           web-ext sign \
             --source-dir=extension-dist/ \
@@ -153,6 +137,7 @@ jobs:
             --api-key=${{ secrets.FIREFOX_API_KEY }} \
             --api-secret=${{ secrets.FIREFOX_API_SECRET }} \
             --upload-source-code=$SOURCE_ZIP \
+            --release-notes="$RELEASE_NOTES" \
             --artifacts-dir=./web-ext-artifacts/
 
           echo "✅ Extension signed and submitted to Firefox AMO"
@@ -163,11 +148,17 @@ jobs:
     continue-on-error: true
 
     steps:
-      - name: Download zip artifact
+      - name: Download dist artifact
         uses: actions/download-artifact@v4
         with:
-          name: extension-zip
-          path: .
+          name: extension-dist
+          path: dist/
+
+      - name: Create zip from dist
+        run: |
+          VERSION="${{ needs.build.outputs.version }}"
+          zip -r "mindful-browse-$VERSION.zip" dist/
+          ls -lh "mindful-browse-$VERSION.zip"
 
       - name: Exchange refresh token for access token
         id: auth
@@ -216,6 +207,7 @@ jobs:
         run: |
           EXTENSION_ID="${{ secrets.CHROME_EXTENSION_ID }}"
           ACCESS_TOKEN="${{ steps.auth.outputs.access-token }}"
+          RELEASE_NOTES="${{ github.event.release.body }}"
 
           # Publish the item
           PUBLISH_RESPONSE=$(curl -s -X POST \
@@ -231,6 +223,26 @@ jobs:
             echo "✅ Successfully published to Chrome Web Store"
           else
             echo "⚠️  Publish status: $PUBLISH_RESPONSE"
+          fi 
+
+          # Properly JSON-encode the release notes to handle special characters
+          NOTES_JSON=$(jq -n --arg notes "$RELEASE_NOTES" '{releaseNotes: {"en-US": $notes}}')
+
+          # Update metadata with release notes
+          NOTES_RESPONSE=$(curl -s -X PATCH \
+            "https://www.googleapis.com/chromewebstore/v1.1/items/$EXTENSION_ID" \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "x-goog-api-version: 2" \
+            -H "Content-Type: application/json" \
+            -d "$NOTES_JSON")
+
+          echo "Release notes response: $NOTES_RESPONSE"
+
+          # Check for success (if no error field, it succeeded)
+          if ! echo "$NOTES_RESPONSE" | grep -q '"error"'; then
+            echo "✅ Successfully added release notes to Chrome Web Store"
+          else
+            echo "⚠️  Release notes update status: $NOTES_RESPONSE"
           fi
 
   deploy-status:

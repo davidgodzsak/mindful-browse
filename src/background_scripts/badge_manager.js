@@ -146,10 +146,10 @@ function _manualDistractionCheck(url, sites) {
       if (
         site.isEnabled &&
         site.urlPattern &&
-        hostname.includes(site.urlPattern)
+        (hostname === site.urlPattern || hostname.endsWith('.' + site.urlPattern))
       ) {
         console.log(
-          `[BadgeManager] Manual match found: ${hostname} contains ${site.urlPattern} (site ID: ${site.id})`
+          `[BadgeManager] Manual match found: ${hostname} matches ${site.urlPattern} (site ID: ${site.id})`
         );
         return { isMatch: true, siteId: site.id };
       }

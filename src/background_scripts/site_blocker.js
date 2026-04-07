@@ -65,7 +65,7 @@ export async function checkAndBlockSite(tabId, url) {
       try {
         const urlObj = new URL(url);
         const hostname = urlObj.hostname;
-        return hostname.includes(site.urlPattern);
+        return hostname === site.urlPattern || hostname.endsWith('.' + site.urlPattern);
       } catch (error) {
         console.warn(`[SiteBlocker] Error parsing URL '${url}':`, error.message);
         return false;
@@ -221,7 +221,8 @@ export async function checkOpenLimitBeforeAccess(url) {
       if (!site.isEnabled || !site.dailyOpenLimit) return false;
       try {
         const urlObj = new URL(url);
-        return urlObj.hostname.includes(site.urlPattern);
+        const hostname = urlObj.hostname;
+        return hostname === site.urlPattern || hostname.endsWith('.' + site.urlPattern);
       } catch (error) {
         console.warn(
           `[SiteBlocker] Error parsing URL '${url}':`,

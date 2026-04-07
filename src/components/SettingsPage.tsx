@@ -116,9 +116,7 @@ const SettingsPage = () => {
     const loadRatingState = async () => {
       try {
         const ratingState = await api.getRatingState();
-        // Check for debug mode (debug-rating=true in URL)
-        const debugMode = new URLSearchParams(window.location.search).get('debug-rating') === 'true';
-        if (ratingState.shouldShow || debugMode) {
+        if (ratingState.shouldShow) {
           setShowRatingBanner(true); // set state first (non-blocking)
           try { await api.recordRatingPromptShown(); } catch { /* non-critical */ }
         }

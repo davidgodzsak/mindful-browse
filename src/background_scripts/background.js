@@ -2194,13 +2194,14 @@ async function broadcastToUIComponents(event, data) {
     // Get all extension pages (settings, timeout) and send message
     try {
       const views = browser.extension.getViews();
+      const extensionOrigin = browser.runtime.getURL('').slice(0, -1);
       views.forEach((view) => {
         if (
           view.location.href.includes('/settings/') ||
           view.location.href.includes('/timeout/')
         ) {
           try {
-            view.postMessage(message, '*');
+            view.postMessage(message, extensionOrigin);
           } catch (error) {
             console.warn('[Background] Error posting message to view:', error);
           }

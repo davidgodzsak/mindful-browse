@@ -121,9 +121,12 @@ export default defineConfig(() => ({
   build: {
     outDir: "../dist",
     emptyOutDir: true,
+    minify: 'esbuild' as const,
+    esbuild: {
+      drop: ['console'],
+    },
     rollupOptions: {
       input: {
-        demo: resolve(__dirname, 'src/index.html'),
         popup: resolve (__dirname , 'src/pages/popup/index.html'),
         settings: resolve (__dirname , 'src/pages/settings/index.html'),
         timeout: resolve (__dirname , 'src/pages/timeout/index.html'),

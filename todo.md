@@ -1,5 +1,9 @@
 # Implememtation Todo
 
+## CRITICAL (Before Publishing)
+
+- [ ] **Chrome Extension ID**: Replace `PLACEHOLDER_ID` in `src/lib/constants/rating.ts:5` with the real Chrome Web Store extension ID before submitting to Chrome Web Store. Currently breaks the "Rate us" link for Chrome users.
+
 ## Bugs
 
 ### Timeout page

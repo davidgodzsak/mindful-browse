@@ -2,7 +2,7 @@ declare const __BROWSER_TARGET__: string;
 
 const RATING_URLS: Record<string, string> = {
   firefox: 'https://addons.mozilla.org/firefox/addon/mindful-browse-/reviews/',
-  chrome: 'https://chromewebstore.google.com/detail/mindful-browse/PLACEHOLDER_ID/reviews',
+  chrome: 'https://chromewebstore.google.com/detail/mindful-browse/fhlebfafkdeiclbanmjjojjijdgllbbf/reviews',
 };
 
 export function getRatingUrl(): string {

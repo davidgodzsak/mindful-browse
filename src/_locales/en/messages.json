@@ -4,7 +4,7 @@
     "description": "Extension name shown in browser and stores"
   },
   "extensionDescription": {
-    "message": "Helps users limit time spent on distracting websites by monitoring usage and blocking sites when daily limits are reached.",
+    "message": "Limit time on distracting websites. Block time-wasting sites, track your usage, stay focused with daily time limits and visit counters.",
     "description": "Extension description in store listing"
   },
   "extensionActionTitle": {
